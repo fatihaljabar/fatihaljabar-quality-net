@@ -32,6 +32,6 @@ RSpec.describe FitGapGeneratorWorker do
     report.reload
     expect(report.generation_status).to eq('failed')
     expect(report.generation_error).to include('model unavailable')
-    expect(report.skill_comparisons).to eq(COMPARISONS)
+    expect(report.skill_comparisons).to eq(TenantHelpers::COMPARISONS)
   end
 end

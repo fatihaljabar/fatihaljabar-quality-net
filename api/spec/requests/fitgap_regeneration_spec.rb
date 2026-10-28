@@ -39,7 +39,7 @@ RSpec.describe 'Fit/gap regeneration', type: :request do
 
       expect(stored_report).not_to be_nil
       expect(stored_report.generation_status).to eq('pending')
-      expect(stored_report.skill_comparisons).to eq(COMPARISONS)
+      expect(stored_report.skill_comparisons).to eq(TenantHelpers::COMPARISONS)
     end
   end
 
@@ -51,7 +51,7 @@ RSpec.describe 'Fit/gap regeneration', type: :request do
 
     expect(response).to have_http_status(:ok)
     body = JSON.parse(response.body).fetch('report')
-    expect(body['skill_comparisons']).to eq(COMPARISONS)
+    expect(body['skill_comparisons']).to eq(TenantHelpers::COMPARISONS)
     expect(body['generation_status']).to eq('pending')
   end
 

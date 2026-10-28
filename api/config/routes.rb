@@ -61,4 +61,8 @@ Rails.application.routes.draw do
       end
     end
   end
+  # Unknown routes answer with JSON instead of the Rails HTML error page.
+  match '*path', via: :all, to: proc {
+    [404, { 'Content-Type' => 'application/json' }, [{ error: 'Route not found', status: 404 }.to_json]]
+  }
 end

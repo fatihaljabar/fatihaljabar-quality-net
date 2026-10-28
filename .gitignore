@@ -22,6 +22,7 @@ web/.vite/
 *.md
 !README.md
 !/assessment/*.md
+!/specs/*.md
 !/RELEASE_NOTES.md
 !/.github/**/*.md
 .claude/

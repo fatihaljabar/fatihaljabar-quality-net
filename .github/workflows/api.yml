@@ -33,8 +33,6 @@ jobs:
         options: >-
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
-      # Eager loading (CI=true) is left off here on purpose: the app cannot eager load today (audit finding A10).
-      # That defect gets its own spec and a failing boot test before it is fixed.
       RAILS_ENV: test
       # Throwaway values: the suite never contacts Gemini and uses no real secret.
       SECRET_KEY_BASE: ci-only-secret-key-base-not-used-anywhere-else

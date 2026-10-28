@@ -7,13 +7,14 @@ Status: accepted
 The API has test gems installed but no `spec/` directory, so nothing proves that the
 behaviours the product depends on still hold. This spec adds the harness and a first
 critical-path suite that locks in what works today (tenant isolation on sessions,
-authentication, ending a session). Known defects are not part of this spec: each one gets
+authentication, ending a session) and a boot check. The boot check exists because the first CI run
+of this suite found that the API cannot eager load or boot in production (audit finding A10). Other known defects are not part of this spec: each one gets
 its own spec and its own failing test, so the history shows red before green.
 
 Critical paths for this suite are those where a silent regression corrupts data or leaks
 it across companies: tenant scoping, authentication and the session lifecycle.
 
-In scope: RSpec setup, shared helpers, three first spec files, a CI job named `API tests`.
+In scope: RSpec setup, shared helpers, four first spec files, a CI job named `API tests`.
 Out of scope: the Gemini live audio pipeline, the web app, and any defect fix.
 
 ## Acceptance Criteria
@@ -31,7 +32,11 @@ Out of scope: the Gemini live audio pipeline, the web app, and any defect fix.
   When the end request succeeds,
   Then the session is stored as ended with the requested reason, a pending portfolio exists for it,
   and exactly one portfolio generation job is queued but not executed.
-- **AC-5** Given a pull request that changes `api/`,
+- **AC-5** Given the application code,
+  When every autoloaded file is eager loaded, and when the production environment is booted in a separate process,
+  Then both succeed. A file whose constant does not match its name, or a production setting for a framework
+  component that is not loaded, fails here instead of at deploy time.
+- **AC-6** Given a pull request that changes `api/`,
   When CI runs,
   Then a job named `API tests` runs the suite, and the check is required before merge.
 
@@ -44,12 +49,14 @@ Out of scope: the Gemini live audio pipeline, the web app, and any defect fix.
 - Request specs under `api/spec/requests/`, one file per concern, each example tagged `[AC-n]`.
 - `.github/workflows/api.yml`: Postgres and Redis service containers, Ruby from `api/.ruby-version`,
   `rails db:create db:migrate`, then `bundle exec rspec`. The check name is added to branch protection.
+- `api/spec/boot_spec.rb`: eager loads the application in-process, and boots `RAILS_ENV=production`
+  with `rails runner` in a child process using throwaway environment values.
 - Known limit: tests that need the real Gemini service are not possible here by design; the suite
   covers our logic around it, not the model's answers.
 
 ## Definition of Done
 
-- [ ] AC-1 to AC-4 pass locally and in CI.
+- [ ] AC-1 to AC-5 pass locally and in CI, with the boot check failing before the fix and passing after.
 - [ ] `API tests` is a required check on `main`.
 - [ ] The harness is documented well enough for another engineer to add a spec file.
 - [ ] No company, product or client name appears in the change.

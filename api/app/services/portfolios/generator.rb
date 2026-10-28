@@ -149,33 +149,47 @@ module Portfolios
 
     def save_skills(portfolio, response)
       data = response.is_a?(Hash) ? response : JSON.parse(response)
+      maps = @session.coverage_maps.to_a
 
       # Destroy existing skills (idempotent regeneration)
       portfolio.portfolio_skills.destroy_all
 
-      (data['configured_skills'] || []).each do |skill_data|
-        portfolio.portfolio_skills.create!(
-          skill_id:           skill_data['skill_id'],
-          skill_label:        skill_data['skill_label'],
-          is_discovered:      false,
-          ai_level:           skill_data['level'].to_i.clamp(1, 5),
-          ai_confidence:      skill_data['confidence'],
-          evidence:           Array(skill_data['evidence']).first(3),
-          competency_summary: skill_data['competency_summary']
-        )
-      end
+      store_skills(portfolio, data['configured_skills'], maps, discovered: false)
+      store_skills(portfolio, data['discovered_skills'], maps, discovered: true)
+    end
 
-      (data['discovered_skills'] || []).each do |skill_data|
+    # A skill is stored only when the interview reached it and the model gave a valid level. The model cannot add
+    # skills the coverage map does not know, and its own confidence is ignored: the coverage data decides.
+    def store_skills(portfolio, skills, maps, discovered:)
+      Array(skills).each do |skill_data|
+        map   = find_map(maps, skill_data, discovered: discovered)
+        level = parse_level(skill_data['level'])
+        next if map.nil? || map.state == 'not_yet' || level.nil?
+
         portfolio.portfolio_skills.create!(
-          skill_id:           nil,
-          skill_label:        skill_data['skill_label'],
-          is_discovered:      true,
-          ai_level:           skill_data['level'].to_i.clamp(1, 5),
-          ai_confidence:      skill_data['confidence'],
+          skill_id:           discovered ? nil : map.skill_id,
+          skill_label:        map.skill_label,
+          is_discovered:      discovered,
+          ai_level:           level,
+          ai_confidence:      Coverage::StateEngine.confidence(state: map.state, probe_count: map.probe_count),
           evidence:           Array(skill_data['evidence']).first(3),
           competency_summary: skill_data['competency_summary']
         )
       end
+    end
+
+    def find_map(maps, skill_data, discovered:)
+      id    = skill_data['skill_id'].presence
+      label = skill_data['skill_label'].to_s.downcase
+
+      maps.find do |map|
+        map.is_discovered == discovered && ((!discovered && id && map.skill_id == id) || map.skill_label.downcase == label)
+      end
+    end
+
+    # 1 to 5, optionally written with an L prefix. Anything else is not a level.
+    def parse_level(value)
+      value.to_s.strip[/\A[lL]?([1-5])\z/, 1]&.to_i
     end
   end
 end

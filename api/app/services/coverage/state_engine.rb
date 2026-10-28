@@ -25,6 +25,15 @@ module Coverage
       true
     end
 
+    # Confidence of a portfolio skill, from the coverage data only (product definition of the portfolio generator):
+    # low when probed once or less or only initiated, high when covered after three or more probes, else medium.
+    def self.confidence(state:, probe_count:)
+      return 'low' if probe_count <= 1 || state == 'initiated'
+      return 'high' if state == 'covered' && probe_count >= 3
+
+      'medium'
+    end
+
     # Given a proposed update from N7, returns the safe state to apply.
     # If the proposed state skips steps (e.g. not_yet → partial), we walk
     # forward one step at a time, applying probe_count gates at each step.

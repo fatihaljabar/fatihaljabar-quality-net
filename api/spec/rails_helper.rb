@@ -20,5 +20,9 @@ RSpec.configure do |config|
     Sidekiq::Worker.clear_all
   end
 
+  # The throttle counters live in Redis and outlive the example, so repeated logins in one run, or in runs
+  # within a minute of each other, would hit the limit and fail unrelated examples. Each example gets its own store.
+  config.before { Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new }
+
   config.after { RequestStore.clear! }
 end

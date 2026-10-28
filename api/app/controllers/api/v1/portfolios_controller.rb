@@ -91,8 +91,7 @@ module Api
           return json_error("Portfolio is not ready (status: #{portfolio.generation_status})", :unprocessable_entity)
         end
 
-        FitGapReport.find_by(portfolio_id: portfolio.id, vacancy_id: vacancy.id)&.destroy
-        FitGapGeneratorWorker.perform_async(portfolio.id, vacancy.id)
+        FitGapReport.request!(portfolio: portfolio, vacancy: vacancy)
 
         render json: { status: "generating", message: "Fit/gap report regeneration queued" }, status: :accepted
       rescue ActiveRecord::RecordNotFound
@@ -113,13 +112,12 @@ module Api
           return json_error("Portfolio is not ready (status: #{portfolio.generation_status})", :unprocessable_entity)
         end
 
-        # Return cached report if it exists and portfolio has no new overrides
+        # A complete report is returned as is. Anything else is asked for through request!, which queues nothing
+        # when a rebuild is already waiting, so a page that polls cannot pile up jobs.
         existing = FitGapReport.find_by(portfolio_id: portfolio.id, vacancy_id: vacancy.id)
-        if existing
-          return json_response(report: fit_gap_json(existing))
-        end
+        return json_response(report: fit_gap_json(existing)) if existing&.complete?
 
-        FitGapGeneratorWorker.perform_async(portfolio.id, vacancy.id)
+        FitGapReport.request!(portfolio: portfolio, vacancy: vacancy)
         render json: { status: "generating", message: "Fit/gap report generation queued" }, status: :accepted
       rescue ActiveRecord::RecordNotFound
         json_error("Portfolio not found", :not_found)
@@ -130,7 +128,9 @@ module Api
         portfolio = Portfolio.find(params[:id])
         report    = FitGapReport.find_by(portfolio_id: portfolio.id, vacancy_id: params[:vacancy_id])
 
-        if report.nil?
+        # 404 until there is something to show: the page treats 404 as "not ready" and waits. A pending report that
+        # still holds its previous comparisons is shown, marked pending; a failed one is shown with its error.
+        if report.nil? || (report.in_flight? && report.skill_comparisons.blank?)
           return json_error("Fit/gap report not found", :not_found)
         end
 
@@ -205,7 +205,9 @@ module Api
           skill_comparisons: report.skill_comparisons,
           culture_narrative: report.culture_narrative,
           overall_narrative: report.overall_narrative,
-          generated_at:      report.generated_at
+          generated_at:      report.generated_at,
+          generation_status: report.generation_status,
+          generation_error:  report.generation_error
         }
       end
 

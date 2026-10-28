@@ -29,10 +29,12 @@ module TenantHelpers
     portfolio
   end
 
-  def create_report(portfolio, vacancy)
-    FitGapReport.create!(portfolio: portfolio, vacancy: vacancy,
-                         skill_comparisons: [{ 'skill_label' => 'Skill', 'expected_level' => 3, 'candidate_level' => 3,
-                                               'result' => 'match', 'delta' => 0 }])
+  COMPARISONS = [{ 'skill_label' => 'Skill', 'expected_level' => 3, 'candidate_level' => 3,
+                   'result' => 'match', 'delta' => 0 }].freeze
+
+  def create_report(portfolio, vacancy, status: 'complete', comparisons: COMPARISONS, error: nil)
+    FitGapReport.create!(portfolio: portfolio, vacancy: vacancy, skill_comparisons: comparisons,
+                         generation_status: status, generation_error: error)
   end
 
   def create_vacancy(tenant)

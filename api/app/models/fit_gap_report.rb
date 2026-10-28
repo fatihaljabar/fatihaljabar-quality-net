@@ -9,5 +9,6 @@ class FitGapReport < ApplicationRecord
   belongs_to :portfolio
   belongs_to :vacancy
 
-  validates :skill_comparisons, presence: true
+  # An empty list is valid: a pending report has not produced comparisons yet. Only a missing value is not.
+  validate { errors.add(:skill_comparisons, :blank) if skill_comparisons.nil? }
 end

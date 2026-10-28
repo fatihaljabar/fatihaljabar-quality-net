@@ -120,11 +120,13 @@ module Api
         return json_error("Invalid or expired invite token", :not_found) unless session
 
         return json_response(ended: true, message: "Session already ended") if session.ended?
+        return json_error("Session has not started", :unprocessable_entity) unless session.active?
 
-        # No coverage re-check here. The backend WS already verified all_covered
-        # before sending preparing_to_end. Re-checking here caused false negatives
-        # (timing gap between WS detection and HTTP call) that stalled auto-end.
-        Sessions::EndHandler.new(session).call(reason: 'all_covered')
+        # The token alone proves nothing about coverage, so the reason is derived from the data instead of assumed.
+        # If a discovered skill appears between the goodbye and this call the label falls back to manual_candidate;
+        # it stays true and the session still ends and gets its portfolio.
+        reason = Coverage::MapInjector.new(session).all_covered? ? 'all_covered' : 'manual_candidate'
+        Sessions::EndHandler.new(session).call(reason: reason)
         json_response(ended: true, message: "Session ended")
       end
 

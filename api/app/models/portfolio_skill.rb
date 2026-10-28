@@ -3,6 +3,9 @@
 class PortfolioSkill < ApplicationRecord
   CONFIDENCE_LEVELS = %w[high medium low].freeze
 
+  # Reachable only through a portfolio of the current tenant (spec 003); see Portfolio.
+  default_scope { where(portfolio_id: Portfolio.select(:id)) }
+
   belongs_to :portfolio
   has_one :assessor_override, dependent: :destroy
 

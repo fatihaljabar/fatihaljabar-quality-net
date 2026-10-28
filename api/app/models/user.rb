@@ -9,6 +9,7 @@ class User < ApplicationRecord
                     uniqueness: { case_sensitive: false },
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :role, inclusion: { in: ROLES }
+  validates :tenant_id, presence: true
 
   before_save :downcase_email
 

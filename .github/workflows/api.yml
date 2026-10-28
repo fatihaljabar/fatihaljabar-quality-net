@@ -1,0 +1,64 @@
+name: API tests
+
+# Critical-path suite for the API, see specs/002-api-test-harness.md.
+# No "paths" filter on purpose: this is a required check, and a required check that is skipped never reports.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-tests:
+    name: API tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      # Eager loading (CI=true) is left off here on purpose: the app cannot eager load today (audit finding A10).
+      # That defect gets its own spec and a failing boot test before it is fixed.
+      RAILS_ENV: test
+      # Throwaway values: the suite never contacts Gemini and uses no real secret.
+      SECRET_KEY_BASE: ci-only-secret-key-base-not-used-anywhere-else
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_URL: redis://localhost:6379/1
+      ALLOWED_ORIGINS: http://localhost:5173
+      GEMINI_API_KEY: not-a-real-key
+      GEMINI_LIVE_MODEL: test
+      GEMINI_FLASH_MODEL: test
+      GEMINI_PRO_MODEL: test
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: '3.3.2'
+          bundler-cache: true
+          working-directory: api
+      - run: bundle exec rails db:create db:migrate
+      - run: bundle exec rspec

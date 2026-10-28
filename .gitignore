@@ -17,3 +17,11 @@ web/.vite/
 
 # OS
 .DS_Store
+
+# Local working docs — never pushed. Only README.md and delivery-required docs are tracked.
+*.md
+!README.md
+!/assessment/*.md
+!/RELEASE_NOTES.md
+!/.github/**/*.md
+.claude/

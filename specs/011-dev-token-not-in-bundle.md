@@ -39,14 +39,20 @@ in during `npm run dev`; only production builds change.
 ## Design Plan
 
 - `getStoredToken` in `web/src/stores/authAtom.ts`: the fallback reads the environment variable only when
-  `import.meta.env.DEV` is true. In a production build that condition is the constant false, so the bundler removes the
-  variable and its value from the output; that is what AC-1 proves, rather than assuming it.
+  `import.meta.env.DEV` is true (AC-3).
+- `web/vite.config.ts`: for a build, `import.meta.env.VITE_DEV_TOKEN` is defined as undefined. This is needed on top of
+  the first point: the first design assumed the bundler would drop the unused value, and the build test (AC-1) stayed red
+  after the source change. A dependency reads the whole `import.meta.env` object, so the bundler copies every `VITE_`
+  variable into a vendor file whatever the app's own code does. Defining the one name removes it from that copy too.
 - `web/src/stores/authAtom.test.ts`: AC-2 to AC-4 with stubbed environment and storage.
 - `web/src/build/bundle-token.test.ts`: runs the real `vite build` into a temporary folder with a marker token in the
   environment and searches every output file for the marker (AC-1). It is slow for a unit test (a few seconds) and runs
   in the `Web build` job like the others.
+- Not covered by a test: that `npm run dev` still receives the token. The definition applies to builds only; AC-2 covers the
+  app's side of it.
 - README: the variable is described as optional and development only.
-- Known limits: other secrets someone puts in a `VITE_` variable would still be published; the check covers this one name
+- Known limits: other secrets someone puts in a `VITE_` variable would still be published (the whole set is copied, see
+  above), so no secret belongs in one; the check covers this one name
   only, which is the one the code reads. A token kept in local storage is readable by scripts of the page (not changed here).
 
 ## Definition of Done

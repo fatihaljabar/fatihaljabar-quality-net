@@ -7,7 +7,7 @@ module Api
 
       before_action :set_portfolio_skill
 
-      # POST /api/v1/portfolio-skills/:id/override
+      # POST /api/v1/portfolio_skills/:id/override
       def override
         existing = @portfolio_skill.assessor_override
 

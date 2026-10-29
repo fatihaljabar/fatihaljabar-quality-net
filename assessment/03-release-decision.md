@@ -117,3 +117,7 @@ tag, PR-2 was fixed on `main` (pull request #17, spec 009: a committed lockfile,
 installs with `npm ci`). The audit now lists four open P1 findings (A7, A8, PR-1b, MS-1), and the verdict for the next
 version is still BLOCKED. On `main` after that change there are 33 gate tests and 52 criteria in nine specs (48 with a tagged test, 4 verified by the pipeline); the figures in
 section 2 are those of the tag.
+
+After that, A7 was fixed too (pull request #20, spec 010: the table follows the API, the API sends the override flag, a
+shared sample of the fit/gap read is tested on both sides, and the release gate reads web tests). Three P1 findings are
+open now: A8, PR-1b (only the fit/gap table has web tests) and MS-1. The verdict for the next version is still BLOCKED.

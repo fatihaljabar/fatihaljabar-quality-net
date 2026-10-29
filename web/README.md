@@ -45,6 +45,7 @@ The app will be available at **http://localhost:5173**.
 | Command             | Description                          |
 | ------------------- | ------------------------------------ |
 | `npm run dev`       | Start Vite dev server with HMR       |
+| `npm test`          | Run the tests once (Vitest)          |
 | `npm run build`     | Type-check with `tsc` then build     |
 | `npm run preview`   | Preview the production build locally |
 

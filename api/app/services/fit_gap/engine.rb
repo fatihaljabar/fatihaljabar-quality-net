@@ -39,10 +39,11 @@ module FitGap
     private
 
     def build_skill_comparisons
-      vacancy_skills = @vacancy.vacancy_skills.index_by(&:skill_label)
       portfolio_skills = effective_portfolio_skills  # includes overrides
 
-      comparisons = vacancy_skills.map do |label, vacancy_skill|
+      # One comparison per skill row, in saved order. A lookup keyed by label would drop a row whose label repeats (spec 018).
+      comparisons = @vacancy.vacancy_skills.order(:id).map do |vacancy_skill|
+        label = vacancy_skill.skill_label
         portfolio_skill = find_portfolio_skill(portfolio_skills, label, vacancy_skill.skill_id)
 
         if portfolio_skill

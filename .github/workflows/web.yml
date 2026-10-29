@@ -1,0 +1,33 @@
+name: Web build
+
+# Installs the web app from its lockfile and builds it, see specs/009-web-lockfile.md.
+# No "paths" filter on purpose: this can become a required check, and a required check that is skipped never reports.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  web-build:
+    name: Web build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: web-${{ github.ref }}
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # npm ci refuses to run without a lockfile or when it disagrees with package.json.
+      - run: npm ci --ignore-scripts
+      - run: npm run build

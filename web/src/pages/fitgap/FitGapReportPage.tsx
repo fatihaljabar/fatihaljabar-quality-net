@@ -62,7 +62,12 @@ export default function FitGapReportPage() {
     if (portfolio) fetchReport();
   }, [portfolio, fetchReport]);
 
-  usePolling(fetchReport, 5000, generating && !!portfolio);
+  // Keep checking while the first report is built and while an existing one is being rebuilt (spec 020).
+  const updating = report?.generation_status === "pending" || report?.generation_status === "generating";
+  const failed = report?.generation_status === "failed";
+  const hasComparisons = (report?.skill_comparisons?.length ?? 0) > 0;
+
+  usePolling(fetchReport, 5000, (generating || updating) && !!portfolio);
 
   const handleRegenerate = async () => {
     if (!portfolio) return;
@@ -153,8 +158,21 @@ export default function FitGapReportPage() {
         </div>
       )}
 
+      {updating && (
+        <div role="status" className="rounded-md border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+          This report is being updated. The comparison below is the previous one and will refresh by itself.
+        </div>
+      )}
+
+      {failed && (
+        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          The report could not be updated{report?.generation_error ? `: ${report.generation_error}` : "."}
+          {hasComparisons ? " The comparison below is the previous one." : " Use Regenerate to try again."}
+        </div>
+      )}
+
       {/* Report ready */}
-      {report && (
+      {report && (!failed || hasComparisons) && (
         <>
           {/* Skill comparison */}
           <Card>

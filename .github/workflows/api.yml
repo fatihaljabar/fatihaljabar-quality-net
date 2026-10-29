@@ -7,18 +7,19 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Reused by the release gate on version tags (specs/008-release-gate.md), so a release runs exactly this net.
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: api-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   api-tests:
     name: API tests
     runs-on: ubuntu-latest
+    concurrency:
+      group: api-${{ github.ref }}
+      cancel-in-progress: true
     services:
       postgres:
         image: postgres:16-alpine

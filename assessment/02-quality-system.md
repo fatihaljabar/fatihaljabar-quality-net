@@ -3,7 +3,7 @@
 This is the net that makes a missing spec, a dropped requirement or a silent regression hard to ship unnoticed.
 It has two halves: a **workflow gate** that refuses a change that does not carry its inputs, and a **test and CI net**
 that refuses a change that breaks something that matters. Both run by themselves on every pull request, and the
-three checks they produce are required before anything merges to `main`.
+four checks they produce are required before anything merges to `main`.
 
 ## 1. The workflow gate (definition of ready)
 
@@ -17,7 +17,7 @@ hard precondition.
 | `.github/pull_request_template.md` | Asks for one line, `Spec: specs/NNN-name.md`, and a definition-of-done checklist. A reminder only; the CI check enforces. |
 | `tools/dor-check.js` | The check. Dependency-free Node. Reads the PR description and the changed files, prints one line per failure and exits non-zero. |
 | `.github/workflows/gate.yml` | Runs the check and its own tests on every pull request, and again when the description is edited. |
-| Branch protection on `main` | `Definition of Ready`, `Gate tests` and `API tests` must pass to merge. |
+| Branch protection on `main` | `Definition of Ready`, `Gate tests`, `API tests` and `Web build` must pass to merge. |
 
 What it blocks (spec 001, acceptance criteria 1 to 6):
 
@@ -81,7 +81,7 @@ without a lockfile and fails when the lockfile and `package.json` disagree, so a
 in `Gate tests` read the lockfile: it must record exactly the dependencies of `package.json`, and every locked package
 must come from the public registry with an integrity hash. What this does **not** do: judge whether the pinned versions
 are safe, update them, or test the app (that is the harness still missing, section 4). Like `API tests` it has no path
-filter, so it can be made a required check; it is not required yet.
+filter, and it is a required check on `main` since it was added to the branch protection after pull request #17.
 
 ## 3. The net against what the audit found
 

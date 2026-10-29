@@ -51,6 +51,12 @@ node --test tools/dor-check.test.js
 PR_BODY="Spec: specs/NNN-name.md" node tools/dor-check.js origin/main
 ```
 
+Check a version before tagging it (the same decision the release pipeline makes on a tag):
+
+```bash
+node tools/release-check.js --tag v1.0.0 --tests passed
+```
+
 To add a check: copy a file from `specs/`, write the test first and tag it `[NNN/AC-n]`, run it and read why it fails,
 then fix. The steps and the reasons are in section 6 of `assessment/02-quality-system.md`.
 

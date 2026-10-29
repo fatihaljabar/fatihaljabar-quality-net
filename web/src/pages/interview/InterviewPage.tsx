@@ -29,6 +29,7 @@ export default function InterviewPage() {
   const [candidateInfo, setCandidateInfo] = useState<CandidateInfo | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [interviewState, setInterviewState] = useState<InterviewState>("idle");
+  const [loadFailed, setLoadFailed] = useState(false);
   const [speaker, setSpeaker] = useState<InterviewSpeaker>(null);
   const [transcript, setTranscript] = useState<Pick<TranscriptTurn, "speaker" | "text">[]>([]);
   const [hardwareCheckDone, setHardwareCheckDone] = useState(false); // kept for green banner
@@ -48,7 +49,8 @@ export default function InterviewPage() {
         setSessionId(res.data.session_id);
         if (res.data.session_status === "ended") setInterviewState("complete");
       })
-      .catch(() => setInterviewState("complete"));
+      // A failed load is not a finished interview (spec 015): say so instead of showing the completion screen.
+      .catch(() => setLoadFailed(true));
   }, [token]);
 
   const muteRef = useRef<(() => void) | null>(null);
@@ -186,6 +188,18 @@ export default function InterviewPage() {
       : connectionState === "connected"
       ? "connected"
       : "reconnecting";
+
+  // A failed load comes before every other screen: the page would otherwise stay on the pre-start screen (spec 015).
+  if (loadFailed) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
+        <h2 className="text-xl font-semibold">We could not load your interview</h2>
+        <p className="text-sm text-muted-foreground">
+          The interview could not be loaded. Please check your link and your connection, then reload this page.
+        </p>
+      </div>
+    );
+  }
 
   // ── State A: Pre-start ──────────────────────────────────────────────────
   if (interviewState === "idle") {

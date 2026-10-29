@@ -121,3 +121,11 @@ section 2 are those of the tag.
 After that, A7 was fixed too (pull request #20, spec 010: the table follows the API, the API sends the override flag, a
 shared sample of the fit/gap read is tested on both sides, and the release gate reads web tests). Three P1 findings are
 open now: A8, PR-1b (only the fit/gap table has web tests) and MS-1. The verdict for the next version is still BLOCKED.
+
+One more mistake of mine, caught by running the gate before writing this note: a web test for 011/AC-4 used a form that the
+release check cannot read (`it.each`), so after pull request #22 the gate briefly reported a criterion without a test. The
+test now uses a plain loop with the same cases and assertions; nothing was weakened.
+
+Then A8 was fixed (pull request #22, spec 011: the development token is never given to a build, and a test builds the
+app and searches the output). Two P1 findings are open now: PR-1b (only part of the fit/gap table, the token source and
+the bundle have web tests) and MS-1 (behaviours nobody specified). The verdict for the next version is still BLOCKED.

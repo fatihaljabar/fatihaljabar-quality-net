@@ -109,3 +109,11 @@ open, two findings with wording the machine could not read, and 21 test tags tha
 to. The other mistakes that the process caught are listed in section 5 of `02-quality-system.md`. I list them because a
 version that was judged only by the person who built it deserves less trust than one whose gate disagreed with its author
 and was believed.
+
+## 9. Update after the tag
+
+This decision describes `v1.0.0` as tagged (commit `c0ebdbe`), and its release page still says what it said. After the
+tag, PR-2 was fixed on `main` (pull request #17, spec 009: a committed lockfile, two tests on it and a `Web build` job that
+installs with `npm ci`). The audit now lists four open P1 findings (A7, A8, PR-1b, MS-1), and the verdict for the next
+version is still BLOCKED. On `main` after that change there are 33 gate tests and 52 criteria in nine specs (48 with a tagged test, 4 verified by the pipeline); the figures in
+section 2 are those of the tag.

@@ -35,8 +35,8 @@ so nobody could say whether anything was correct. That is the real finding; the 
 
 **Ship line.** Do not ship until the P0 and every P1 that touches data or other companies' data is fixed and guarded
 by an automated check. As of this report: the P0 and A1 to A6 are fixed, each with a failing test committed before the
-fix and a passing run after. **A7, A8, the missing web tests (PR-1b), the missing lockfile (PR-2) and the behaviours nobody defined
-(MS-1) remain, so the honest answer for this version is: not ready to ship to a client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
+fix and a passing run after. **A7, A8, the missing web tests (PR-1b) and the behaviours nobody defined
+(MS-1) remain (the missing lockfile, PR-2, was fixed afterwards), so the honest answer for this version is: not ready to ship to a client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
 
 ## 2. How the platform was assessed
 
@@ -78,7 +78,7 @@ not match it), **MS** missing or ambiguous spec (never defined), **PR** a missin
 | 9 | A8 | P1 (conditional) | BW | A development login token set at build time ends up in the public bundle and lets any visitor past the login gate. | Built with a marker token: it appears in two bundle files. Reproduced. | **Remaining** |
 | 10 | PR-1 | P1 | PR | No tests, CI, acceptance criteria or design plan: nobody can say whether anything is correct. | Repository survey. | **Fixed** (the gate, PR #2; the API tests, PR #4) |
 | 11 | PR-1b | P1 | PR | The web app has no tests, so a regression in it, including A7 and A8, goes unnoticed. | Repository survey: no web test runner and no web job in CI. | **Remaining** |
-| 12 | PR-2 | P1 | PR | No npm lockfile: dependency versions float, builds are not reproducible. | Repository survey. | **Remaining** |
+| 12 | PR-2 | P1 | PR | No npm lockfile: dependency versions float, builds are not reproducible. | Repository survey. | **Fixed** (PR #17) |
 | 13 | MS-1 | P1 | MS | No spec for tenant isolation, roles, signup, vacancies, overrides, regeneration, error states, retention of candidate transcripts and audio, or editing an assessment after sessions exist. | Compared the product documents with the code. | **Remaining** (specs 003 to 007 define what was fixed; the rest is still undefined) |
 | 14 | MS-2 | P1 | MS | The product documents do not say what a portfolio or fit/gap shows for a skill with no evidence or an interview that ended early; it was left to the model. | Compared the documents with the generator. | **Accepted** owner: Fatih, reason: the behaviour is defined by an assumption in spec 005 until product confirms it |
 | 15 | A9 | P2 (lowered from P1 after testing) | BW | Tenant resolution can fall back to a default organization and stays open without a tenant in context. | Read the code, then tested: not reproduced here because the database has no default organization. May apply in production. | **Remaining** |
@@ -190,6 +190,6 @@ skim, the PDF generator beyond checking that overrides are applied, the skill ca
 
 ## 10. Status at the time of writing
 
-Fixed: A10 (P0), A1, A2, A3, A4, A5, A6 and PR-1. Remaining P1: A7, A8, PR-1b, PR-2 and MS-1; MS-2 is accepted with an
+Fixed: A10 (P0), A1, A2, A3, A4, A5, A6, PR-1 and PR-2. Remaining P1: A7, A8, PR-1b and MS-1; MS-2 is accepted with an
 owner. Remaining P2 and P3: all of section 4 marked remaining. Each fixed item has its spec in `specs/`, a failing test
 committed before the fix, a passing CI run after it, and a merge that keeps both in the history.

@@ -24,7 +24,8 @@ Each service has its own setup guide. Run the API first, then the web app pointe
 
 Every pull request runs three required checks: `Definition of Ready`, `Gate tests` and `API tests`. What they protect and
 what they leave out is in [`assessment/02-quality-system.md`](assessment/02-quality-system.md); the audit that motivated
-them is in [`assessment/01-audit.md`](assessment/01-audit.md).
+them is in [`assessment/01-audit.md`](assessment/01-audit.md). A fourth check, `Web build`, installs the web app from its
+lockfile with `npm ci` and builds it.
 
 Run the API tests (Docker for the services, Ruby 3.3.2, from the repository root):
 

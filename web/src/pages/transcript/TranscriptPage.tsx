@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sessionsApi } from "@/services/sessions";
@@ -11,7 +12,7 @@ export default function TranscriptPage() {
   const [turns, setTurns] = useState<TranscriptTurn[]>([]);
   const [candidateName, setCandidateName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     Promise.all([
@@ -22,7 +23,7 @@ export default function TranscriptPage() {
         setTurns(tRes.data.turns);
         setCandidateName(sRes.data.session.candidate_name ?? null);
       })
-      .catch(() => setError(true))
+      .catch(setError)
       .finally(() => setLoading(false));
   }, [sessionId]);
 
@@ -39,6 +40,8 @@ export default function TranscriptPage() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (!loading && error) return <LoadError error={error} backTo={`/assessments/${id}/sessions/${sessionId}/portfolio`} backLabel="Back to the portfolio" />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -70,12 +73,6 @@ export default function TranscriptPage() {
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="border rounded-lg p-6 text-center text-sm text-destructive">
-          Failed to load transcript. Please refresh.
         </div>
       )}
 

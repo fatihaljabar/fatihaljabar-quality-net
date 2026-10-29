@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [overrides, setOverrides] = useState<Record<number, AssessorOverride>>({});
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [selectedVacancy, setSelectedVacancy] = useState<string>("");
@@ -47,7 +49,7 @@ export default function PortfolioPage() {
         setVacancies(vRes.data.vacancies);
         setCandidateName(sRes.data.session.candidate_name ?? null);
       })
-      .catch(() => {})
+      .catch(setLoadError)
       .finally(() => setLoading(false));
   }, [fetchPortfolio, sessionId]);
 
@@ -103,6 +105,8 @@ export default function PortfolioPage() {
       </div>
     );
   }
+
+  if (loadError) return <LoadError error={loadError} backTo={`/assessments/${id}/invite`} backLabel="Back to the assessment" />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

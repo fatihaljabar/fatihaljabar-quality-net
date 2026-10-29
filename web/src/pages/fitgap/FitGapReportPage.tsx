@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +23,7 @@ export default function FitGapReportPage() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [exporting, setExporting] = useState<"pdf" | "json" | null>(null);
   const [regenerating, setRegenerating] = useState(false);
 
@@ -52,6 +54,7 @@ export default function FitGapReportPage() {
           setPortfolio(data.portfolio);
         }
       })
+      .catch(setLoadError)
       .finally(() => setLoading(false));
   }, [sessionId]);
 
@@ -101,6 +104,8 @@ export default function FitGapReportPage() {
       </div>
     );
   }
+
+  if (loadError) return <LoadError error={loadError} backTo={`/assessments/${id}/invite`} backLabel="Back to the assessment" />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

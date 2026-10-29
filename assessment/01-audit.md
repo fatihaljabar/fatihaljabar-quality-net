@@ -35,8 +35,8 @@ so nobody could say whether anything was correct. That is the real finding; the 
 
 **Ship line.** Do not ship until the P0 and every P1 that touches data or other companies' data is fixed and guarded
 by an automated check. As of this report: the P0 and A1 to A6 are fixed, each with a failing test committed before the
-fix and a passing run after. **A7 and A8 remain, so the honest answer for this version is: not ready to ship to a
-client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
+fix and a passing run after. **A7, A8, the missing web tests (PR-1b), the missing lockfile (PR-2) and the behaviours nobody defined
+(MS-1) remain, so the honest answer for this version is: not ready to ship to a client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
 
 ## 2. How the platform was assessed
 
@@ -71,33 +71,38 @@ not match it), **MS** missing or ambiguous spec (never defined), **PR** a missin
 | 2 | A2 | P1 | BW | Any admin can obtain a valid token for any other company and get full access to it. | Logged in with another company's scheme in a header: token issued, other company's data returned. Reproduced. | **Fixed** (PR #5) |
 | 3 | A1 | P1 | BW | Any company can read (portfolio, evidence quotes, fit/gap, exports) and change (level override) another company's candidate data by id; error messages reveal which ids exist. | Called export, override and fit/gap with another company's ids. Reproduced. | **Fixed** (PR #5) |
 | 4 | A3 | P1 | BW | An interview link can end a session that never started, stores a false end reason and creates a portfolio from nothing. | Called the unauthenticated endpoint on a pending session: ended as "all covered". Reproduced. | **Fixed** (PR #6) |
-| 5 | A4 | P1 | BW | Hiring decisions can rest on invented levels and confidence; a skill nobody examined can show as a "Gap". | Read the generator; reproduced the stored values with a scripted stand-in for the model. | **Fixed** (PR #7); a display follow-up remains |
-| 6 | A5 | P1 | BW | An interview can end early as "all covered" and the skill gets high confidence without any judgement. | Read the job; compared the original and fixed code on the same data. Reproduced. | **Fixed** (PR #8); trade-off open |
-| 7 | A6 | P1 | BW | A failed rebuild loses the assessor's fit/gap report; a waiting page queues a job every five seconds; a failed job spins forever. | Stopped the worker and saved an override: report gone; repeated polls: four jobs for one report. Reproduced. | **Fixed for data and API** (PR #9); the page part remains |
+| 5 | A4 | P1 | BW | Hiring decisions can rest on invented levels and confidence; a skill nobody examined can show as a "Gap". | Read the generator; reproduced the stored values with a scripted stand-in for the model. | **Fixed** (PR #7) |
+| 6 | A5 | P1 | BW | An interview can end early as "all covered" and the skill gets high confidence without any judgement. | Read the job; compared the original and fixed code on the same data. Reproduced. | **Fixed** (PR #8) |
+| 7 | A6 | P1 | BW | A failed rebuild loses the assessor's fit/gap report; a waiting page queues a job every five seconds; a failed job spins forever. | Stopped the worker and saved an override: report gone; repeated polls: four jobs for one report. Reproduced. | **Fixed** (PR #9) |
 | 8 | A7 | P1 | BW | The fit/gap table's "Required" column is empty, so a Gap or Exceed cannot be interpreted; the PDF is right and the screen is wrong. | API returns `expected_level`, the web reads `required_level`. Reproduced on the API response; not yet seen in a browser. | **Remaining** |
 | 9 | A8 | P1 (conditional) | BW | A development login token set at build time ends up in the public bundle and lets any visitor past the login gate. | Built with a marker token: it appears in two bundle files. Reproduced. | **Remaining** |
-| 10 | PR-1 | P1 | PR | No tests, CI, acceptance criteria or design plan: nobody can say whether anything is correct. | Repository survey. | **Fixed for the API** and the process; **remaining for the web** (no web tests) |
-| 11 | PR-2 | P1 | PR | No npm lockfile: dependency versions float, builds are not reproducible. | Repository survey. | **Remaining** |
-| 12 | MS-1 | P1 | MS | No spec for tenant isolation, roles, signup, vacancies, overrides, regeneration, error states, retention of candidate transcripts and audio, or editing an assessment after sessions exist. | Compared the product documents with the code. | **Partly addressed:** specs 003 to 007 define what was fixed; the rest remains |
-| 13 | MS-2 | P1 | MS | The product documents do not say what a portfolio or fit/gap shows for a skill with no evidence or an interview that ended early; it was left to the model. | Compared the documents with the generator. | **Assumption written** (spec 005), awaiting product |
-| 14 | A9 | P2 (lowered from P1 after testing) | BW | Tenant resolution can fall back to a default organization and stays open without a tenant in context. | Read the code, then tested: not reproduced here because the database has no default organization. May apply in production. | **Remaining** |
-| 15 | B1 | P2 | BW, PR | Closed tickets were never fixed: unknown routes return an HTML error page, and edit pages show an empty form for a record that does not exist. | Checked each closed ticket against the code. | **Remaining.** A JSON 404 change was written as the demonstration of the gate being blocked and is deliberately not merged |
-| 16 | B2 | P2 | BW | Deleting an assessment that has sessions reports success while nothing is deleted. | Read the controller. | **Remaining** |
-| 17 | B3 | P2 | BW | Regenerating a portfolio is not atomic and removes assessor overrides; reachable only after a failure. | Read the generator. | **Remaining** (latent) |
-| 18 | B4 | P2 | MS | Editing an assessment after interviews changes the definitions used to build their portfolios. | Read the generator. | **Remaining** |
-| 19 | B5 | P2 | BW | Any 401 or 403 in the web logs the user out and redirects to login, including "forbidden", which can loop. | Read the HTTP client. | **Remaining** |
-| 20 | B6 | P2 | BW | If the candidate page cannot load its details, it shows the "interview complete" screen. | Read the page. | **Remaining** |
-| 21 | B7 | P2 | BW, MS | Discovered skills start at a probe count of one, are not in the priority order and can hold an interview open; the documents disagree on how they are modelled. | Compared the code with both documents. | **Remaining** |
-| 22 | B9 | P2 | BW | Duplicate skill labels in a vacancy overwrite each other in the fit/gap comparison. | Read the engine. | **Remaining** |
-| 23 | B10 | P2 | MS, BW | The signup page calls an endpoint that does not exist, is not routed, and offers an "Admin" role. | Read the page and routes. | **Remaining** |
-| 24 | B11 | P2 | BW | The sample configuration allows any CORS origin; the API refuses to start without the setting. | Read the configuration. | **Remaining** |
-| 25 | B12 | P2 (hypothesis) | BW | The hardware check may be blocked in production by the content security policy. | Compared the policy with the speed-test calls. | **Remaining**, not verified |
-| 26 | MS-3 | P2 | MS | The two product documents contradict each other (see section 6). | Read both. | **Remaining** |
-| 27 | B8 | P3 | BW | The coverage map is injected differently from the document (channel and wording). | Compared the code with the document. | **Remaining**, not verified at runtime |
-| 28 | B13 | P3 | BW | Documentation drift: ports, folder names, a variable name, a framework version, a route name. | Read the READMEs against the code. | **Remaining** |
+| 10 | PR-1 | P1 | PR | No tests, CI, acceptance criteria or design plan: nobody can say whether anything is correct. | Repository survey. | **Fixed** (the gate, PR #2; the API tests, PR #4) |
+| 11 | PR-1b | P1 | PR | The web app has no tests, so a regression in it, including A7 and A8, goes unnoticed. | Repository survey: no web test runner and no web job in CI. | **Remaining** |
+| 12 | PR-2 | P1 | PR | No npm lockfile: dependency versions float, builds are not reproducible. | Repository survey. | **Remaining** |
+| 13 | MS-1 | P1 | MS | No spec for tenant isolation, roles, signup, vacancies, overrides, regeneration, error states, retention of candidate transcripts and audio, or editing an assessment after sessions exist. | Compared the product documents with the code. | **Remaining** (specs 003 to 007 define what was fixed; the rest is still undefined) |
+| 14 | MS-2 | P1 | MS | The product documents do not say what a portfolio or fit/gap shows for a skill with no evidence or an interview that ended early; it was left to the model. | Compared the documents with the generator. | **Accepted** owner: Fatih, reason: the behaviour is defined by an assumption in spec 005 until product confirms it |
+| 15 | A9 | P2 (lowered from P1 after testing) | BW | Tenant resolution can fall back to a default organization and stays open without a tenant in context. | Read the code, then tested: not reproduced here because the database has no default organization. May apply in production. | **Remaining** |
+| 16 | A4-UI | P2 | BW | A skill that was not assessed is absent from the portfolio page instead of being shown as "not assessed", so an assessor cannot tell it from one that was never configured. | Follows from the design of the A4 fix (spec 005, known limits). | **Remaining** |
+| 17 | A6-UI | P2 | BW | The fit/gap page does not show a failed or updating report; a failed report with no previous data shows an empty table. | Follows from the design of the A6 fix (spec 007, known limits). | **Remaining** |
+| 18 | B1 | P2 | BW, PR | Closed tickets were never fixed: unknown routes return an HTML error page, and edit pages show an empty form for a record that does not exist. | Checked each closed ticket against the code. | **Remaining.** A JSON 404 change was written as the demonstration of the gate being blocked and is deliberately not merged |
+| 19 | B2 | P2 | BW | Deleting an assessment that has sessions reports success while nothing is deleted. | Read the controller. | **Remaining** |
+| 20 | B3 | P2 | BW | Regenerating a portfolio is not atomic and removes assessor overrides; reachable only after a failure. | Read the generator. | **Remaining** (latent) |
+| 21 | B4 | P2 | MS | Editing an assessment after interviews changes the definitions used to build their portfolios. | Read the generator. | **Remaining** |
+| 22 | B5 | P2 | BW | Any 401 or 403 in the web logs the user out and redirects to login, including "forbidden", which can loop. | Read the HTTP client. | **Remaining** |
+| 23 | B6 | P2 | BW | If the candidate page cannot load its details, it shows the "interview complete" screen. | Read the page. | **Remaining** |
+| 24 | B7 | P2 | BW, MS | Discovered skills start at a probe count of one, are not in the priority order and can hold an interview open; the documents disagree on how they are modelled. | Compared the code with both documents. | **Remaining** |
+| 25 | B9 | P2 | BW | Duplicate skill labels in a vacancy overwrite each other in the fit/gap comparison. | Read the engine. | **Remaining** |
+| 26 | B10 | P2 | MS, BW | The signup page calls an endpoint that does not exist, is not routed, and offers an "Admin" role. | Read the page and routes. | **Remaining** |
+| 27 | B11 | P2 | BW | The sample configuration allows any CORS origin; the API refuses to start without the setting. | Read the configuration. | **Remaining** |
+| 28 | B12 | P2 (hypothesis) | BW | The hardware check may be blocked in production by the content security policy. | Compared the policy with the speed-test calls. | **Remaining**, not verified |
+| 29 | MS-3 | P2 | MS | The two product documents contradict each other (see section 6). | Read both. | **Remaining** |
+| 30 | B8 | P3 | BW | The coverage map is injected differently from the document (channel and wording). | Compared the code with the document. | **Remaining**, not verified at runtime |
+| 31 | B13 | P3 | BW | Documentation drift: ports, folder names, a variable name, a framework version, a route name. | Read the READMEs against the code. | **Remaining** |
 
 The first column is the rank. Within a severity, items that touch data across companies come first, then data that is
-wrong underneath, then the rest.
+wrong underneath, then the rest. The first word of the final status is read by the release check
+(`tools/release-check.js`): Fixed, Remaining or Accepted. A fixed item carries no remainder; whatever is left over is its
+own row (A4-UI, A6-UI, PR-1b).
 
 ## 5. The P0 and P1 items in detail
 
@@ -184,6 +189,6 @@ skim, the PDF generator beyond checking that overrides are applied, the skill ca
 
 ## 10. Status at the time of writing
 
-Fixed: A10 (P0), A1, A2, A3, A4, A5, A6 (data and API). Remaining P1: A7, A8, PR-2, and the web part of PR-1.
-Remaining P2 and P3: all of section 4 marked remaining. Each fixed item has its spec in `specs/`, a failing test
+Fixed: A10 (P0), A1, A2, A3, A4, A5, A6 and PR-1. Remaining P1: A7, A8, PR-1b, PR-2 and MS-1; MS-2 is accepted with an
+owner. Remaining P2 and P3: all of section 4 marked remaining. Each fixed item has its spec in `specs/`, a failing test
 committed before the fix, a passing CI run after it, and a merge that keeps both in the history.

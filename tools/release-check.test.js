@@ -3,7 +3,10 @@
 // Tests for specs/008-release-gate.md. Each test name carries its spec and criterion id.
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { evaluate, renderReport } = require('./release-check');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { evaluate, renderReport, testFiles } = require('./release-check');
 
 const HEADER = '| # | ID | Sev | Cat | Impact | How found | Final status |\n|---|---|---|---|---|---|---|\n';
 const auditWith = (...rows) =>
@@ -145,4 +148,17 @@ test('[008/AC-9] puts the verdict first in the report and lists every reason', (
   assert.match(blocked, /A7/);
   assert.match(blocked, /tests/i);
   assert.match(renderReport(verdict(), 'v1.0.0').split('\n')[0], /RELEASABLE/);
+});
+
+test('[010/AC-6] collects the web tests too, so a criterion tested only there counts as tested', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'release-check-'));
+  const files = ['api/spec/a_spec.rb', 'tools/b.test.js', 'web/src/components/c.test.tsx', 'web/src/d.test.ts',
+    'web/src/not_a_test.tsx', 'web/node_modules/pkg/e.test.js'];
+  for (const f of files) {
+    fs.mkdirSync(path.join(root, path.dirname(f)), { recursive: true });
+    fs.writeFileSync(path.join(root, f), '');
+  }
+
+  assert.deepEqual(testFiles(root).sort(),
+    ['api/spec/a_spec.rb', 'tools/b.test.js', 'web/src/components/c.test.tsx', 'web/src/d.test.ts']);
 });

@@ -1,6 +1,7 @@
 name: Web build
 
-# Installs the web app from its lockfile and builds it, see specs/009-web-lockfile.md.
+# Installs the web app from its lockfile, runs its tests and builds it, see specs/009-web-lockfile.md and
+# specs/010-web-api-contract.md.
 # No "paths" filter on purpose: this can become a required check, and a required check that is skipped never reports.
 on:
   pull_request:
@@ -30,4 +31,5 @@ jobs:
           node-version: 22
       # npm ci refuses to run without a lockfile or when it disagrees with package.json.
       - run: npm ci --ignore-scripts
+      - run: npm test
       - run: npm run build

@@ -151,22 +151,31 @@ module Portfolios
       data = response.is_a?(Hash) ? response : JSON.parse(response)
       maps = @session.coverage_maps.to_a
 
-      # Destroy existing skills (idempotent regeneration)
-      portfolio.portfolio_skills.destroy_all
-
-      store_skills(portfolio, data['configured_skills'], maps, discovered: false)
-      store_skills(portfolio, data['discovered_skills'], maps, discovered: true)
+      # All or nothing, and an existing skill is updated in place so the override of an assessor stays with it (spec 019).
+      # A skill the answer no longer contains is removed, with its override.
+      ActiveRecord::Base.transaction do
+        existing = portfolio.portfolio_skills.to_a
+        kept = store_skills(portfolio, data['configured_skills'], maps, existing, discovered: false) +
+               store_skills(portfolio, data['discovered_skills'], maps, existing, discovered: true)
+        portfolio.portfolio_skills.where.not(id: kept.map(&:id)).destroy_all
+      end
+      portfolio.portfolio_skills.reset # the association was loaded before the rows changed
     end
 
     # A skill is stored only when the interview reached it and the model gave a valid level. The model cannot add
     # skills the coverage map does not know, and its own confidence is ignored: the coverage data decides.
-    def store_skills(portfolio, skills, maps, discovered:)
-      Array(skills).each do |skill_data|
+    # Returns the rows it stored. A row of `existing` is reused once, so a skill repeated in the answer still gets two rows.
+    def store_skills(portfolio, skills, maps, existing, discovered:)
+      Array(skills).filter_map do |skill_data|
         map   = find_map(maps, skill_data, discovered: discovered)
         level = parse_level(skill_data['level'])
         next if map.nil? || map.state == 'not_yet' || level.nil?
 
-        portfolio.portfolio_skills.create!(
+        row = existing.find { |s| s.skill_label == map.skill_label && s.is_discovered == discovered }
+        existing.delete(row) if row
+        row ||= portfolio.portfolio_skills.build
+
+        row.update!(
           skill_id:           discovered ? nil : map.skill_id,
           skill_label:        map.skill_label,
           is_discovered:      discovered,
@@ -175,6 +184,7 @@ module Portfolios
           evidence:           Array(skill_data['evidence']).first(3),
           competency_summary: skill_data['competency_summary']
         )
+        row
       end
     end
 

@@ -7,7 +7,7 @@ RSpec.describe 'Ending a session', type: :request do
   let(:tenant) { create_tenant }
   let!(:session) { create_interview_session(tenant) }
 
-  it '[AC-4] stores the session as ended with the requested reason and queues one portfolio job' do
+  it '[002/AC-4] stores the session as ended with the requested reason and queues one portfolio job' do
     expect do
       post "/api/v1/sessions/#{session.id}/end_session",
            params: { session: { reason: 'manual_assessor' } }.to_json,
@@ -22,7 +22,7 @@ RSpec.describe 'Ending a session', type: :request do
     expect(PortfolioGeneratorWorker.jobs.last['args']).to eq([session.id])
   end
 
-  it '[AC-4] refuses to end a session that is already ended and queues nothing' do
+  it '[002/AC-4] refuses to end a session that is already ended and queues nothing' do
     session.update!(status: 'ended', end_reason: 'manual_assessor', ended_at: Time.current)
 
     expect do

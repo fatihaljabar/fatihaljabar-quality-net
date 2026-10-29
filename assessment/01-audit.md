@@ -186,6 +186,7 @@ skim, the PDF generator beyond checking that overrides are applied, the skill ca
 | An honest "partial" is preferred over finishing an interview early without evidence. | Spec 006 | Fatih, with product |
 | While a fit/gap rebuild runs, the previous report stays visible and is marked pending. | Spec 007 | Fatih, with product |
 | The brief gives both three to four days and three to five days; the deadline shown on the platform governs. | Brief | Fatih |
+| The brief says to commit the platform as received, and also forbids naming the company, the product or any client anywhere in the repository. The history counts as "anywhere", so the source was made neutral before the first commit: names in comments, example configuration and strings were replaced by generic ones (41 lines in 25 files, no logic changed). The generic identifier `ai-interview` was kept because it describes the function and renaming it risks breaking code and infrastructure. | Initial import | Fatih |
 
 ## 10. Status at the time of writing
 

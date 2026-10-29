@@ -6,6 +6,7 @@
 | Gate verdict | BLOCKED, five open P1 findings. Dry run on `main`: [run 40841198699](https://github.com/fatihaljabar/fatihaljabar-quality-net/actions/runs/40841198699). The run on the tag must give the same verdict. |
 | Date | 2026-10-29 |
 | Decision owner | Fatih, as the owner of the engineering quality gate |
+| Later version | **v1.1.0**: see section 10. v1.0.0 stays blocked; v1.1.0 is releasable only with two accepted risks. |
 
 ## 1. The call, in plain words
 
@@ -129,3 +130,37 @@ test now uses a plain loop with the same cases and assertions; nothing was weake
 Then A8 was fixed (pull request #22, spec 011: the development token is never given to a build, and a test builds the
 app and searches the output). Two P1 findings are open now: PR-1b (only part of the fit/gap table, the token source and
 the bundle have web tests) and MS-1 (behaviours nobody specified). The verdict for the next version is still BLOCKED.
+
+## 10. Decision for v1.1.0: releasable with two accepted risks
+
+| | |
+|---|---|
+| **Decision** | **RELEASABLE WITH ACCEPTED RISKS.** Not a clean release: two P1 findings are accepted, not fixed. |
+| Gate verdict | RELEASABLE, read from the audit table and the specs by `tools/release-check.js`; the run on the tag must say the same, and this document is wrong if it does not. |
+| Decision owner | Fatih |
+
+**What changed since v1.0.0.** Three of the five blocking findings were fixed, each with a test that failed before the fix
+and passes after: A7 (the empty "Required" column), A8 (the development token in the bundle) and PR-2 (the lockfile). The
+other two, PR-1b and MS-1, were not fixed. They are accepted in the audit table with a named owner, which is the only way
+the gate lets a P1 through. The gate lists them on the release page.
+
+**The two accepted risks, in plain words.**
+
+| ID | What is not covered | Who is hurt | Why accepted instead of fixed | Conditions I recommend |
+|---|---|---|---|---|
+| PR-1b | Most web pages (interview, live monitor, assessment, vacancy, hardware check) have no tests. Only the fit/gap table, the source of the login token and the production bundle do. | Everyone who uses a page that regresses unnoticed. | The other pages have no written behaviour to test against; tests written from the current code would only freeze whatever it does, including its mistakes. | A manual walk through the main screens before each deployment, and a test added with every web change from now on (the gate already requires it). |
+| MS-1 | Roles, signup, vacancies, retention of candidate transcripts and audio, and editing an assessment after interviews were never specified. | Candidates, whose data is kept for an undefined time; companies, whose staff roles are undefined. | They need a product decision. A spec written by guessing would invent requirements and then be tested as if it were fact. | Use with real candidates only as a trial where they are told how their data is handled; a client rollout only after product defines retention and roles, as specs. |
+
+The conditions are my recommendation; the acceptance and its conditions are Fatih's decision, and a business owner can
+replace them. **If the business does not accept these risks, the honest state is that the version stays blocked**, and the
+audit table must say `Remaining` again.
+
+**Why I am willing to put my name to this, and where I would not.** The risks accepted here cannot be closed by more code in
+this exercise: one needs a decision that is not mine, the other needs behaviour that nobody wrote down. Every finding that
+corrupts or leaks data was fixed and is guarded; none of the accepted ones does. I would not accept a finding that touches
+company isolation or stored levels in this way, and the gate would not let me hide one: it reads the table, and an acceptance
+without an owner blocks.
+
+**What the gate still cannot see** (unchanged from section 4): the language model itself, the live audio path, a migration on
+production data, deployment and load, and whether a finding is rated correctly. It also cannot judge whether an acceptance is
+wise; it only refuses an acceptance that has no owner.

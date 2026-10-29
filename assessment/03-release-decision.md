@@ -73,10 +73,11 @@ Before this reaches a client I would require, in this order:
 - **Anything about deployment, load or security beyond a static scan** and the fixes listed in the audit.
 - **The honesty of the audit table.** The gate checks its form, not whether a finding is rated correctly.
   That judgement is this document.
-- **A flaw in the gate itself, found while writing this.** A criterion counts as verified by the pipeline when its text
-  contains the words "Verified by", without regard to case or a colon. A criterion that only mentions the phrase would be
-  exempted from needing a test. Today it exempts one criterion by accident (008/AC-3), which does have tests, so the
-  verdict above is right. The fix is to match `Verified by:` exactly; it is open and owned by Fatih.
+- **A flaw in the gate itself, found while writing this and fixed afterwards.** A criterion counted as verified by the
+  pipeline when its text contained the words "Verified by", without regard to case or a colon, so a criterion that only
+  mentioned the phrase was exempted from needing a test. It exempted one criterion by accident (008/AC-3), which does have
+  tests, so the verdict above was right. Fixed in pull request #15 (spec 008, AC-10): only the exact marker `Verified by:`
+  exempts a criterion. The gate still cannot judge whether a pipeline really verifies what the marker claims.
 
 ## 5. If someone decides to ship anyway
 

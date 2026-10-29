@@ -59,7 +59,7 @@ function auditReasons(audit, accepted) {
 function criteriaOf(spec) {
   const section = (spec.text.split(/^## Acceptance Criteria\s*$/m)[1] || '').split(/^## /m)[0];
   const blocks = section.split(/^(?=- \*\*AC-\d+\*\*)/m).filter((b) => /^- \*\*AC-\d+\*\*/.test(b));
-  return blocks.map((b) => [`${spec.id}/AC-${b.match(/^- \*\*AC-(\d+)\*\*/)[1]}`, /Verified by/i.test(b)]);
+  return blocks.map((b) => [`${spec.id}/AC-${b.match(/^- \*\*AC-(\d+)\*\*/)[1]}`, /Verified by:/.test(b)]);
 }
 
 function traceabilityReasons(specs, tests) {

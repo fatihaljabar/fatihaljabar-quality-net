@@ -61,4 +61,8 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Anything no route above matches gets a JSON 404, never the framework's HTML page (spec 012). Keep these last.
+  match '/', to: 'routing_errors#not_found', via: :all
+  match '*unmatched', to: 'routing_errors#not_found', via: :all, format: false
 end

@@ -120,7 +120,7 @@ read its input blocks. Run by hand with a version, the same pipeline is a dry ru
 ## 5. Red to green
 
 One row per defect. "Red" is a CI run that failed on the commit that added the tests; "green" is the run on the commit
-that fixed it. Run ids are those of the `API tests` job.
+that fixed it. Run ids are those of the `API tests` job, except in the last row, which is the `Gate tests` job.
 
 | Defect | Spec | Red (commit, run, result) | Green (commit, run, result) | Note |
 |---|---|---|---|---|
@@ -130,6 +130,7 @@ that fixed it. Run ids are those of the `API tests` job.
 | A4 portfolio stores unsupported values | 005 | `39c7533`, 40741395837, 9 of 37 failed | `473287c`, 40743220463, 37 of 37 | |
 | A5 covered without judgement | 006 | `b413f72`, 40744779569, 2 of 41 failed | `2ca89fa`, 40746182960, 41 of 41 | |
 | A6 fit/gap regeneration | 007 | `52eb069`, 40748070986, 14 of 56 failed | `0b5c19e`, 40749209203, 56 of 56 | A correction to my own tests sits between them: `be62f78`. |
+| Release gate exempts a criterion that only mentions the marker words | 008 (AC-10) | `a02980e`, 40847104962, 2 of 31 gate tests failed | `449a50c`, 40847607071, 31 of 31 | A flaw in the gate itself (pull request #15), found by running it on its own documents. |
 
 No check was made green by deleting or weakening it. The one change to a test after its red run, `be62f78`, fixed a
 reference that could not resolve and left every assertion as it was. Every pull request is merged with a merge commit,

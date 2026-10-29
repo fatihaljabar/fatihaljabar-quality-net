@@ -83,6 +83,15 @@ must come from the public registry with an integrity hash. What this does **not*
 are safe, update them, or test the app (that is the harness still missing, section 4). Like `API tests` it has no path
 filter, and it is a required check on `main` since it was added to the branch protection after pull request #17.
 
+## 2c. Web tests and the contract with the API
+
+The web app now has a test runner (Vitest with a simulated browser, no network), run by `Web build` before the build
+(spec 010). The agreement between the two services is one written sample of a fit/gap read, `contracts/fit-gap-report.json`:
+the web test renders the table from it and checks the required level, the candidate level and the override marker; an API
+spec builds a real report, reads it through the endpoint and checks that it has exactly the sample's fields and kinds of
+value. A field renamed on one side fails one of the two tests. What it does **not** do: a field renamed on both sides at once
+is not caught, only the fit/gap read has a sample, and the other pages are untested.
+
 ## 3. The net against what the audit found
 
 The net would have caught the audit's defects before a human looked:
@@ -94,12 +103,13 @@ The net would have caught the audit's defects before a human looked:
 | A3, A4, A5, A6 | `API tests`, the files in the table above. |
 | PR-1 no inputs, no tests | The gate, and `API tests`. |
 | PR-2 no lockfile | `Gate tests` (two tests on the lockfile) and `Web build` (`npm ci`), see section 2b. |
-| A7 field mismatch between web and API, A8 token in the bundle | **Not yet.** There is no web test harness (section 4). |
+| A7 field mismatch between web and API | `Web build` (table test) and `API tests` (contract spec), see section 2c. |
+| A8 token in the bundle | **Not yet.** A web harness exists now, but no build check looks for the token (section 4). |
 
 ## 4. What the net does not cover
 
-- **The web app has no tests.** A7 and A8 are known and unguarded, and any other web regression goes unnoticed.
-- **No contract test** compares what the API returns with what the web reads. This is the class of bug behind A7.
+- **Most of the web app has no tests.** Only the fit/gap table is covered. A8 is known and unguarded, and any other web regression goes unnoticed.
+- **Only one contract exists** (the fit/gap read). Other responses that the web reads by hand-written types, such as the portfolio, have no sample and no test; that is the class of bug behind A7.
 - **Traceability proves presence, not quality.** The release gate (section 4b) checks both ways that every criterion has
   a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. A criterion is exempt from needing
   a test only with the exact marker `Verified by:`, but the gate cannot check that the pipeline really verifies it.
@@ -130,7 +140,7 @@ read its input blocks. Run by hand with a version, the same pipeline is a dry ru
 ## 5. Red to green
 
 One row per defect. "Red" is a CI run that failed on the commit that added the tests; "green" is the run on the commit
-that fixed it. Run ids are those of the `API tests` job, except in the last two rows, which are the `Gate tests` and `Web build` jobs.
+that fixed it. Run ids are those of the `API tests` job, except in the last three rows, where the failing jobs differ and are named.
 
 | Defect | Spec | Red (commit, run, result) | Green (commit, run, result) | Note |
 |---|---|---|---|---|
@@ -142,6 +152,7 @@ that fixed it. Run ids are those of the `API tests` job, except in the last two 
 | A6 fit/gap regeneration | 007 | `52eb069`, 40748070986, 14 of 56 failed | `0b5c19e`, 40749209203, 56 of 56 | A correction to my own tests sits between them: `be62f78`. |
 | Release gate exempts a criterion that only mentions the marker words | 008 (AC-10) | `a02980e`, 40847104962, 2 of 31 gate tests failed | `449a50c`, 40847607071, 31 of 31 | A flaw in the gate itself (pull request #15), found by running it on its own documents. |
 | PR-2 no web lockfile | 009 | `9334d73`, 40850212863 and 40850212963, 2 of 33 gate tests failed and `npm ci` refused to run | `9ca38be`, 40850385571 and 40850385481, 33 of 33 and a clean install and build | Pull request #17. The fix is the lockfile itself. |
+| A7 empty required column, no override flag, gate blind to web tests | 010 | `7ff110f`, 40854365743 (web), 40854365637 (API, 2 of 58 failed), 40854365805 (gate, 1 of 34 failed) | `baee822`, 40855517854 (web, 2 of 2), 40855517846 (API, 58 of 58), 40855517838 (gate, 34 of 34) | Pull request #20. One test, the override marker in the table, was green from the start: it guards a path that already worked. |
 
 No check was made green by deleting or weakening it. The one change to a test after its red run, `be62f78`, fixed a
 reference that could not resolve and left every assertion as it was. Every pull request is merged with a merge commit,

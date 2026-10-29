@@ -45,6 +45,12 @@ bundle exec rspec
 The suite never calls the language model, so the placeholder values above are enough. `CI=true` turns eager loading
 on, as in production and in CI.
 
+Run the web tests (Node 22 or newer):
+
+```bash
+cd web && npm ci --ignore-scripts && npm test
+```
+
 Run the gate's own tests and the check itself (Node 22 or newer, no install needed):
 
 ```bash

@@ -27,16 +27,17 @@ What I found, in plain words:
    confidence shown. (A5, P1)
 6. **Rebuilding a fit/gap report deleted the old one first,** had no failed state, and queued a new job every five
    seconds while a page waited. (A6, P1)
-7. **Two web defects remain:** the fit/gap table shows an empty "Required" column because the web and the API name the
-   field differently, and a development login token can end up inside the production bundle. (A7 and A8, P1)
+7. **Two web defects were found:** the fit/gap table showed an empty "Required" column because the web and the API name
+   the field differently (A7, P1, fixed afterwards), and a development login token can end up inside the production
+   bundle (A8, P1, still open).
 
 Underneath all of it: there were no tests, no CI, no written acceptance criteria and no design plan for any feature,
 so nobody could say whether anything was correct. That is the real finding; the rest are its consequences.
 
 **Ship line.** Do not ship until the P0 and every P1 that touches data or other companies' data is fixed and guarded
 by an automated check. As of this report: the P0 and A1 to A6 are fixed, each with a failing test committed before the
-fix and a passing run after. **A7, A8, the missing web tests (PR-1b) and the behaviours nobody defined
-(MS-1) remain (the missing lockfile, PR-2, was fixed afterwards), so the honest answer for this version is: not ready to ship to a client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
+fix and a passing run after. **A8, the missing web tests (PR-1b) and the behaviours nobody defined
+(MS-1) remain (the missing lockfile, PR-2, and the empty column, A7, were fixed afterwards), so the honest answer for this version is: not ready to ship to a client.** The release decision (`03-release-decision.md`) states what is gated and who owns the remaining risk.
 
 ## 2. How the platform was assessed
 
@@ -74,10 +75,10 @@ not match it), **MS** missing or ambiguous spec (never defined), **PR** a missin
 | 5 | A4 | P1 | BW | Hiring decisions can rest on invented levels and confidence; a skill nobody examined can show as a "Gap". | Read the generator; reproduced the stored values with a scripted stand-in for the model. | **Fixed** (PR #7) |
 | 6 | A5 | P1 | BW | An interview can end early as "all covered" and the skill gets high confidence without any judgement. | Read the job; compared the original and fixed code on the same data. Reproduced. | **Fixed** (PR #8) |
 | 7 | A6 | P1 | BW | A failed rebuild loses the assessor's fit/gap report; a waiting page queues a job every five seconds; a failed job spins forever. | Stopped the worker and saved an override: report gone; repeated polls: four jobs for one report. Reproduced. | **Fixed** (PR #9) |
-| 8 | A7 | P1 | BW | The fit/gap table's "Required" column is empty, so a Gap or Exceed cannot be interpreted; the PDF is right and the screen is wrong. | API returns `expected_level`, the web reads `required_level`. Reproduced on the API response; not yet seen in a browser. | **Remaining** |
+| 8 | A7 | P1 | BW | The fit/gap table's "Required" column is empty, so a Gap or Exceed cannot be interpreted; the PDF is right and the screen is wrong. | API returns `expected_level`, the web reads `required_level`. Reproduced on the API response; not yet seen in a browser. | **Fixed** (PR #20) |
 | 9 | A8 | P1 (conditional) | BW | A development login token set at build time ends up in the public bundle and lets any visitor past the login gate. | Built with a marker token: it appears in two bundle files. Reproduced. | **Remaining** |
 | 10 | PR-1 | P1 | PR | No tests, CI, acceptance criteria or design plan: nobody can say whether anything is correct. | Repository survey. | **Fixed** (the gate, PR #2; the API tests, PR #4) |
-| 11 | PR-1b | P1 | PR | The web app has no tests, so a regression in it, including A7 and A8, goes unnoticed. | Repository survey: no web test runner and no web job in CI. | **Remaining** |
+| 11 | PR-1b | P1 | PR | Most of the web app has no tests, so a regression in it, including A8, goes unnoticed. | Repository survey: no web test runner and no web job in CI. A runner and a `Web build` job now exist (PR #20), but only the fit/gap table is tested; the interview, live monitor, assessment, vacancy and hardware check pages are not. | **Remaining** |
 | 12 | PR-2 | P1 | PR | No npm lockfile: dependency versions float, builds are not reproducible. | Repository survey. | **Fixed** (PR #17) |
 | 13 | MS-1 | P1 | MS | No spec for tenant isolation, roles, signup, vacancies, overrides, regeneration, error states, retention of candidate transcripts and audio, or editing an assessment after sessions exist. | Compared the product documents with the code. | **Remaining** (specs 003 to 007 define what was fixed; the rest is still undefined) |
 | 14 | MS-2 | P1 | MS | The product documents do not say what a portfolio or fit/gap shows for a skill with no evidence or an interview that ended early; it was left to the model. | Compared the documents with the generator. | **Accepted** owner: Fatih, reason: the behaviour is defined by an assumption in spec 005 until product confirms it |
@@ -139,9 +140,11 @@ openly: some interviews will now run to the time limit instead of finishing earl
 request while one is waiting queues nothing, a failed rebuild is recorded with its error, and the previous report stays
 readable. Remaining: the page does not yet show the failed or updating state.
 
-**A7 and A8 (remaining).** A7 is a field-name mismatch between the two services (`expected_level` on the API,
-`required_level` in the web types and table). A8 is a build-time variable that is also a fallback login token; if it is
-set for a production build, it is embedded in the public files. Both need a web test harness, which does not exist yet.
+**A7 (fixed) and A8 (remaining).** A7 was a field-name mismatch between the two services (`expected_level` on the API,
+`required_level` in the web types and table), and the override marker never appeared because the API did not send its
+flag. Fixed by following the API in the web app and sending the flag, with a shared sample of the read that both sides are
+tested against. A8 is a build-time variable that is also a fallback login token; if it is set for a production build, it
+is embedded in the public files. It needs a build check on top of the web harness that now exists.
 
 ## 6. Missing or ambiguous spec versus built wrong
 
@@ -190,6 +193,6 @@ skim, the PDF generator beyond checking that overrides are applied, the skill ca
 
 ## 10. Status at the time of writing
 
-Fixed: A10 (P0), A1, A2, A3, A4, A5, A6, PR-1 and PR-2. Remaining P1: A7, A8, PR-1b and MS-1; MS-2 is accepted with an
+Fixed: A10 (P0), A1, A2, A3, A4, A5, A6, A7, PR-1 and PR-2. Remaining P1: A8, PR-1b and MS-1; MS-2 is accepted with an
 owner. Remaining P2 and P3: all of section 4 marked remaining. Each fixed item has its spec in `specs/`, a failing test
 committed before the fix, a passing CI run after it, and a merge that keeps both in the history.

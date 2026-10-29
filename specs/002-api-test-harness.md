@@ -21,7 +21,7 @@ Out of scope: the Gemini live audio pipeline, the web app, and any defect fix.
 
 - **AC-1** Given a clean checkout and a Postgres database prepared with `rails db:create db:migrate`,
   When `bundle exec rspec` runs with no Gemini key and no network access to Gemini,
-  Then the suite runs and exits 0.
+  Then the suite runs and exits 0. Verified by: the `API tests` workflow, which runs it on every pull request.
 - **AC-2** Given two tenants that each own a session,
   When an admin of tenant A requests a session of tenant B through the sessions endpoint,
   Then the response is 404 and tenant B's data is not returned.
@@ -38,7 +38,8 @@ Out of scope: the Gemini live audio pipeline, the web app, and any defect fix.
   component that is not loaded, fails here instead of at deploy time.
 - **AC-6** Given a pull request that changes `api/`,
   When CI runs,
-  Then a job named `API tests` runs the suite, and the check is required before merge.
+  Then a job named `API tests` runs the suite, and the check is required before merge. Verified by: the `API tests`
+  check on any pull request and its entry in the branch protection of `main`.
 
 ## Design Plan
 

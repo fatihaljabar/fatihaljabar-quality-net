@@ -94,10 +94,26 @@ The net would have caught the audit's defects before a human looked:
 - **The model itself.** Tests cover our logic around the model, not the quality of its answers, and no real model call
   has been exercised.
 - **The live audio path** (reconnection, time limit, wrap-up) has no test, and neither do the web pages that drive it.
-- **No release gate yet.** It is built next and described in `03-release-decision.md`.
+- **The release gate reads the audit table as written.** It proves the table's form, not its honesty: a finding that is
+  rated too low passes. That judgement is recorded and owned in `03-release-decision.md`.
 - **The gate can be bypassed by the repository owner.** Branch protection does not apply to administrators, so that
   the owner can still commit directly as the brief allows. Mitigation: every code change went through a pull request,
   and the blocked demonstration pull request was left unmerged. Owner of the risk: Fatih.
+
+## 4b. The release gate
+
+On a version tag (`v*.*.*`), `.github/workflows/release.yml` runs the same `API tests` workflow and the gate tests, then
+`tools/release-check.js` decides RELEASABLE or BLOCKED from data (spec 008):
+
+- every P0 or P1 row of the audit table is Fixed, or Accepted with a named owner;
+- every acceptance criterion of every spec has a test tagged `[NNN/AC-n]`, or says it is verified by the pipeline, and
+  every tag names a criterion that exists;
+- `RELEASE_NOTES.md` has a section for the version;
+- the tests passed.
+
+The verdict is the title of the release page of that tag (`v1.0.0: BLOCKED` or `v1.0.0: RELEASABLE`), with the reasons
+in its body; a blocked version is a pre-release and never "latest", and the run on the tag is red. A gate that cannot
+read its input blocks. Run by hand with a version, the same pipeline is a dry run that publishes nothing.
 
 ## 5. Red to green
 

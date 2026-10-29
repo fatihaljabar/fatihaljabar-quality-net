@@ -7,11 +7,11 @@ require 'open3'
 # Development does not eager load, so a misnamed constant or a setting for an unloaded component
 # stays invisible until deploy. This check makes it fail in CI instead.
 RSpec.describe 'Application boot' do
-  it '[AC-5] eager loads every autoloaded file' do
+  it '[002/AC-5] eager loads every autoloaded file' do
     expect { Rails.application.eager_load! }.not_to raise_error
   end
 
-  it '[AC-5] boots in the production environment' do
+  it '[002/AC-5] boots in the production environment' do
     env = {
       'RAILS_ENV' => 'production',
       'DB_NAME' => ActiveRecord::Base.connection_db_config.database,

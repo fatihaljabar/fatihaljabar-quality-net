@@ -1,0 +1,88 @@
+name: Release gate
+
+# Spec 008. On a version tag: run the same net as every pull request, then decide RELEASABLE or BLOCKED from data,
+# publish the verdict on the release page of that tag, and fail the run when BLOCKED.
+# Run by hand (workflow_dispatch) it is a dry run: same checks, same verdict, nothing is published.
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version to check, for example v1.0.0 (dry run, nothing is published)
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  api-tests:
+    uses: ./.github/workflows/api.yml
+
+  gate-tests:
+    name: Gate tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node --test tools/*.test.js
+
+  release-status:
+    name: Release status
+    needs: [api-tests, gate-tests]
+    # Runs when the tests fail too: a failed test run is itself a reason to block, and must be published as one.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      # Never interpolated into a command: passed through the environment and quoted.
+      TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+      TESTS: ${{ needs.api-tests.result == 'success' && needs.gate-tests.result == 'success' && 'passed' || 'failed' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Decide
+        id: decide
+        run: |
+          set +e
+          node tools/release-check.js --tag "$TAG" --tests "$TESTS" --out release-status.md
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat release-status.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish the verdict on the release page
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CODE: ${{ steps.decide.outputs.code }}
+        run: |
+          if [ "$CODE" = "0" ]; then
+            title="$TAG: RELEASABLE"; flags=(--prerelease=false --latest)
+          else
+            title="$TAG: BLOCKED"; flags=(--prerelease --latest=false)
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$title" --notes-file release-status.md "${flags[@]}"
+          else
+            gh release create "$TAG" --verify-tag --title "$title" --notes-file release-status.md "${flags[@]}"
+          fi
+
+      - name: Fail when blocked
+        if: ${{ steps.decide.outputs.code != '0' }}
+        run: |
+          echo "::error title=Release blocked::$(head -n 1 release-status.md)"
+          exit 1

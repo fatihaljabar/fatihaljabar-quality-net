@@ -91,9 +91,8 @@ The net would have caught the audit's defects before a human looked:
 - **The web app has no tests.** A7 and A8 are known and unguarded, and any other web regression goes unnoticed.
 - **No contract test** compares what the API returns with what the web reads. This is the class of bug behind A7.
 - **Traceability proves presence, not quality.** The release gate (section 4b) checks both ways that every criterion has
-  a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. It also treats a
-  criterion as verified by the pipeline when its text contains the words "Verified by", in any case; a stricter match
-  is planned (see `03-release-decision.md`, section 4).
+  a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. A criterion is exempt from needing
+  a test only with the exact marker `Verified by:`, but the gate cannot check that the pipeline really verifies it.
 - **The model itself.** Tests cover our logic around the model, not the quality of its answers, and no real model call
   has been exercised.
 - **The live audio path** (reconnection, time limit, wrap-up) has no test, and neither do the web pages that drive it.

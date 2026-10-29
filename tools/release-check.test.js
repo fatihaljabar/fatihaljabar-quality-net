@@ -76,6 +76,21 @@ test('[008/AC-3] exempts a criterion that is marked as verified by CI', () => {
   assert.equal(r.verdict, 'RELEASABLE');
 });
 
+test('[008/AC-10] does not exempt a criterion that only mentions the words without the colon', () => {
+  const specs = [SPEC('009', 'Given a, When b, Then c.', 'Given d, When e, Then f. Nobody has verified by hand that this works.')];
+  const r = verdict({ specs, tests: [TEST('009/AC-1')] });
+  assert.equal(r.verdict, 'BLOCKED');
+  assert.deepEqual(acs(r), ['AC-3']);
+  assert.match(r.reasons[0].message, /009\/AC-2/);
+});
+
+test('[008/AC-10] does not exempt a criterion with the marker in another case', () => {
+  const specs = [SPEC('009', 'Given a, When b, Then c.', 'Given d, When e, Then f. verified by: the pipeline run.')];
+  const r = verdict({ specs, tests: [TEST('009/AC-1')] });
+  assert.equal(r.verdict, 'BLOCKED');
+  assert.deepEqual(acs(r), ['AC-3']);
+});
+
 test('[008/AC-4] blocks on a tag that names a criterion no spec defines', () => {
   const r = verdict({ tests: [TEST('009/AC-1', '009/AC-2', '009/AC-9')] });
   assert.equal(r.verdict, 'BLOCKED');

@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - run: node --test tools/dor-check.test.js
+      - run: node --test tools/*.test.js
 
   dor:
     name: Definition of Ready

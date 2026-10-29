@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -56,6 +57,7 @@ export default function LiveMonitorPage() {
   const [assessmentName, setAssessmentName] = useState<string>("");
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [ending, setEnding] = useState(false);
   const [endError, setEndError] = useState(false);
   const [sessionActive, setSessionActive] = useState(true);
@@ -91,6 +93,7 @@ export default function LiveMonitorPage() {
           lastTurnRef.current = turns[turns.length - 1].turn_number;
         }
       })
+      .catch(setLoadError)
       .finally(() => setLoading(false));
   }, [sessionId]);
 
@@ -136,6 +139,8 @@ export default function LiveMonitorPage() {
       </div>
     );
   }
+
+  if (loadError) return <LoadError error={loadError} backTo={`/assessments/${id}/invite`} backLabel="Back to the assessment" />;
 
   const configuredSkills = coverageMap?.skills ?? [];
   const discoveredSkills = coverageMap?.discovered ?? [];

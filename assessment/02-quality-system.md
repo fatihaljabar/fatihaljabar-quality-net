@@ -92,6 +92,14 @@ spec builds a real report, reads it through the endpoint and checks that it has 
 value. A field renamed on one side fails one of the two tests. What it does **not** do: a field renamed on both sides at once
 is not caught, only the fit/gap read has a sample, and the other pages are untested.
 
+## 2d. The production bundle check
+
+A test in the `Web build` job (spec 011) runs the real `vite build` into a temporary folder with a marker token in the
+environment and searches every output file for the marker. It exists because the first fix, reading the token only in
+development mode, did not remove it from the published files; only the test showed that. What it does **not** do: look
+for any other name. All `VITE_` variables are copied into the bundle by a dependency, so the check covers the one name the
+code treats as a credential, and the rule that no secret goes into such a variable is by convention only.
+
 ## 3. The net against what the audit found
 
 The net would have caught the audit's defects before a human looked:
@@ -104,11 +112,11 @@ The net would have caught the audit's defects before a human looked:
 | PR-1 no inputs, no tests | The gate, and `API tests`. |
 | PR-2 no lockfile | `Gate tests` (two tests on the lockfile) and `Web build` (`npm ci`), see section 2b. |
 | A7 field mismatch between web and API | `Web build` (table test) and `API tests` (contract spec), see section 2c. |
-| A8 token in the bundle | **Not yet.** A web harness exists now, but no build check looks for the token (section 4). |
+| A8 token in the bundle | `Web build` (tests of the token source and of the real production build), see section 2d. |
 
 ## 4. What the net does not cover
 
-- **Most of the web app has no tests.** Only the fit/gap table is covered. A8 is known and unguarded, and any other web regression goes unnoticed.
+- **Most of the web app has no tests.** Only the fit/gap table, where the token comes from and the production bundle are covered; any other web regression goes unnoticed.
 - **Only one contract exists** (the fit/gap read). Other responses that the web reads by hand-written types, such as the portfolio, have no sample and no test; that is the class of bug behind A7.
 - **Traceability proves presence, not quality.** The release gate (section 4b) checks both ways that every criterion has
   a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. A criterion is exempt from needing
@@ -140,7 +148,7 @@ read its input blocks. Run by hand with a version, the same pipeline is a dry ru
 ## 5. Red to green
 
 One row per defect. "Red" is a CI run that failed on the commit that added the tests; "green" is the run on the commit
-that fixed it. Run ids are those of the `API tests` job, except in the last three rows, where the failing jobs differ and are named.
+that fixed it. Run ids are those of the `API tests` job, except in the last four rows, where the failing jobs differ and are named.
 
 | Defect | Spec | Red (commit, run, result) | Green (commit, run, result) | Note |
 |---|---|---|---|---|
@@ -153,6 +161,7 @@ that fixed it. Run ids are those of the `API tests` job, except in the last thre
 | Release gate exempts a criterion that only mentions the marker words | 008 (AC-10) | `a02980e`, 40847104962, 2 of 31 gate tests failed | `449a50c`, 40847607071, 31 of 31 | A flaw in the gate itself (pull request #15), found by running it on its own documents. |
 | PR-2 no web lockfile | 009 | `9334d73`, 40850212863 and 40850212963, 2 of 33 gate tests failed and `npm ci` refused to run | `9ca38be`, 40850385571 and 40850385481, 33 of 33 and a clean install and build | Pull request #17. The fix is the lockfile itself. |
 | A7 empty required column, no override flag, gate blind to web tests | 010 | `7ff110f`, 40854365743 (web), 40854365637 (API, 2 of 58 failed), 40854365805 (gate, 1 of 34 failed) | `baee822`, 40855517854 (web, 2 of 2), 40855517846 (API, 58 of 58), 40855517838 (gate, 34 of 34) | Pull request #20. One test, the override marker in the table, was green from the start: it guards a path that already worked. |
+| A8 development token in the production bundle | 011 | `d923281`, 40857524228 (web, 2 of 7 failed) | `ff21371`, 40857824931 (web, 7 of 7) | Pull request #22. The first fix, in the app code only, left the bundle test red; the second part is in the build configuration. Two other jobs of the same commits passed and are not listed. |
 
 No check was made green by deleting or weakening it. The one change to a test after its red run, `be62f78`, fixed a
 reference that could not resolve and left every assertion as it was. Every pull request is merged with a merge commit,

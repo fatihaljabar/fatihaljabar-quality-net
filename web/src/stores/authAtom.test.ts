@@ -27,10 +27,13 @@ describe("getStoredToken", () => {
     expect(getStoredToken()).toBeNull();
   });
 
-  it.each([true, false])("[011/AC-4] prefers the stored token (development mode: %s)", (dev) => {
-    vi.stubEnv("DEV", dev);
-    localStorage.setItem("auth_token", STORED_TOKEN);
+  // A plain loop, not it.each: the release check finds a criterion by a tag that opens the test name.
+  for (const dev of [true, false]) {
+    it(`[011/AC-4] prefers the stored token (development mode: ${dev})`, () => {
+      vi.stubEnv("DEV", dev);
+      localStorage.setItem("auth_token", STORED_TOKEN);
 
-    expect(getStoredToken()).toBe(STORED_TOKEN);
-  });
+      expect(getStoredToken()).toBe(STORED_TOKEN);
+    });
+  }
 });

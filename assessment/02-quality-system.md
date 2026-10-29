@@ -66,7 +66,8 @@ trivial code:
 | `fit_gap_without_tenant_spec` (1) | Background jobs, which run with no company in context, breaking when scoping changes. | guards A1 |
 
 Each example is tagged with its spec and criterion, for example `[003/AC-4]`. Specs 001 and 002 predate that
-convention and use a bare `[AC-n]`; see section 4.
+convention and first used a bare `[AC-n]`; those tags were renamed (names only, assertions untouched) so every tag now
+says which spec it belongs to.
 
 **How a check is trusted.** For every defect: the test is written first and shown failing **for the right reason**
 (the failure message is read, not only counted); after the fix it is broken again on purpose (a mutation) to prove the
@@ -89,8 +90,10 @@ The net would have caught the audit's defects before a human looked:
 
 - **The web app has no tests.** A7 and A8 are known and unguarded, and any other web regression goes unnoticed.
 - **No contract test** compares what the API returns with what the web reads. This is the class of bug behind A7.
-- **Traceability is not automated.** The tags exist, but nothing yet checks that every criterion has a test and every
-  tagged test points at a real criterion (the "both ways" the release gate needs). Specs 001 and 002 use unqualified tags.
+- **Traceability proves presence, not quality.** The release gate (section 4b) checks both ways that every criterion has
+  a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. It also treats a
+  criterion as verified by the pipeline when its text contains the words "Verified by", in any case; a stricter match
+  is planned (see `03-release-decision.md`, section 4).
 - **The model itself.** Tests cover our logic around the model, not the quality of its answers, and no real model call
   has been exercised.
 - **The live audio path** (reconnection, time limit, wrap-up) has no test, and neither do the web pages that drive it.

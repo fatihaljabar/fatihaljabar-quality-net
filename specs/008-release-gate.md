@@ -66,7 +66,7 @@ Assumptions (no spec existed, to be confirmed by product):
   results as arguments, writes a Markdown report and exits non-zero when BLOCKED. A reader sees the verdict first.
 - Traceability: tags have the form `[NNN/AC-n]`. The tests of specs 001 and 002 used a bare `[AC-n]` and are renamed
   (names only, no assertion changes) so every tag is unambiguous. A criterion that is satisfied by the pipeline rather
-  than a test carries the words `Verified by` and is exempt from needing a tag; specs 002 and 008 have one each.
+  than a test carries the words `Verified by` and is exempt from needing a tag; spec 002 has two (AC-1, AC-6) and spec 008 has one (AC-9).
 - Audit table: the status cell starts with `Fixed`, `Remaining` or `Accepted`. Rows that were half fixed are split so a
   fixed finding carries no hidden remainder: the display follow-ups of A4 and A6 become their own P2 rows, and the web
   half of PR-1 its own P1 row.

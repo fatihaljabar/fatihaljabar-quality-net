@@ -38,11 +38,15 @@ const info = (status: string) =>
   ({ data: { session_id: 1, role_title: "Role", time_limit_min: 10, session_status: status } }) as never;
 
 describe("InterviewPage when it loads the session", () => {
-  beforeEach(() => getInfo.mockReset());
+  beforeEach(() => {
+    (sessionsApi as { getCandidateInfo: unknown }).getCandidateInfo = getInfo;
+    getInfo.mockReset();
+  });
   afterEach(cleanup);
 
   it("[015/AC-1] says the interview could not be loaded and never shows it as complete", async () => {
-    getInfo.mockRejectedValue(new Error("network down"));
+    // A plain function, not a mock: this vitest version fails a test whose mock returned a rejected promise.
+    (sessionsApi as { getCandidateInfo: unknown }).getCandidateInfo = () => Promise.reject(new Error("network down"));
 
     renderPage();
 

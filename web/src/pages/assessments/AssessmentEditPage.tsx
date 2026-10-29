@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import {
   DndContext,
   closestCenter,
@@ -33,6 +34,7 @@ export default function AssessmentEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function AssessmentEditPage() {
         const a = res.data.assessment;
         reset({ name: a.name, time_limit_min: a.time_limit_min, skills: a.skills });
       })
-      .catch(() => {})
+      .catch(setLoadError)
       .finally(() => setLoading(false));
   }, [id, reset]);
 
@@ -97,6 +99,8 @@ export default function AssessmentEditPage() {
       </div>
     );
   }
+
+  if (loadError) return <LoadError error={loadError} backTo="/assessments" backLabel="Back to assessments" />;
 
   return (
     <div className="max-w-2xl mx-auto">

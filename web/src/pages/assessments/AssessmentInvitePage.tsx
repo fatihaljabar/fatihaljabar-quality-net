@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -126,6 +127,7 @@ export default function AssessmentInvitePage() {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [newSession, setNewSession] = useState<Session | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -145,7 +147,7 @@ export default function AssessmentInvitePage() {
     ]).then(([aRes, sRes]) => {
       setAssessment(aRes.data.assessment);
       setSessions(sRes.data.sessions);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch(setLoadError).finally(() => setLoading(false));
   }, [id]);
 
   // Poll while any session is live or pending
@@ -197,6 +199,8 @@ export default function AssessmentInvitePage() {
       </div>
     );
   }
+
+  if (loadError) return <LoadError error={loadError} backTo="/assessments" backLabel="Back to assessments" />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

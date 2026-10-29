@@ -58,6 +58,10 @@ Assumptions (no spec existed, to be confirmed by product):
   When the pipeline runs,
   Then a release page for that tag states RELEASABLE or BLOCKED with the reasons, and the pipeline run is red when
   the verdict is BLOCKED. Verified by: the release workflow run on the tag, not by a unit test.
+- **AC-10** Given a criterion that mentions the marker words in its text without being marked, that is, without the
+  exact spelling and the colon that the design plan defines,
+  When the release check runs and no test is tagged with that criterion,
+  Then the verdict is BLOCKED and names the criterion; only the exact marker exempts a criterion from needing a test.
 
 ## Design Plan
 
@@ -66,7 +70,7 @@ Assumptions (no spec existed, to be confirmed by product):
   results as arguments, writes a Markdown report and exits non-zero when BLOCKED. A reader sees the verdict first.
 - Traceability: tags have the form `[NNN/AC-n]`. The tests of specs 001 and 002 used a bare `[AC-n]` and are renamed
   (names only, no assertion changes) so every tag is unambiguous. A criterion that is satisfied by the pipeline rather
-  than a test carries the words `Verified by` and is exempt from needing a tag; spec 002 has two (AC-1, AC-6) and spec 008 has one (AC-9).
+  than a test carries the exact marker `Verified by:` (capital V, with the colon; nothing looser counts) and is exempt from needing a tag; spec 002 has two (AC-1, AC-6) and spec 008 has one (AC-9).
 - Audit table: the status cell starts with `Fixed`, `Remaining` or `Accepted`. Rows that were half fixed are split so a
   fixed finding carries no hidden remainder: the display follow-ups of A4 and A6 become their own P2 rows, and the web
   half of PR-1 its own P1 row.

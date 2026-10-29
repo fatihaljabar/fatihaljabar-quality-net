@@ -1,5 +1,49 @@
 # Release notes
 
+## v1.2.0
+
+**Status: see the release page of this tag.** The pipeline decides RELEASABLE or BLOCKED from data; this file states what the
+version claims, not whether it passed. The call, the risks that stay accepted and the things to know before deploying are in
+`assessment/03-release-decision.md`, section 11.
+
+### What this version claims to deliver
+
+Everything in v1.1.0, plus the smaller findings of the audit fixed, each guarded by a test that failed before the fix and passes
+after:
+
+- **Candidate invite links open the web app** (B14). The setting that builds them is the address of the web app; its default, the
+  sample configuration, the production manifest and the readme now say so.
+- **Unknown routes answer JSON** (B1). Pages for a record that cannot be loaded say why (not found, not allowed, invalid state or
+  any other failure) instead of showing an empty form, and the candidate page no longer shows "complete" when it could not load.
+- **Honest answers and pages:** deleting an assessment that has interviews answers 422 (B2); the web app signs a user out only on
+  a 401 of a signed-in request (B5); the fit/gap page shows when a report is being updated or has failed (A6-UI); the portfolio
+  page lists the configured skills that were not assessed (A4-UI).
+- **Data kept intact:** the fit/gap report compares every skill row of a vacancy (B9); regenerating a portfolio is all or nothing
+  and keeps assessor overrides (B3).
+- **Trust boundaries:** an unknown tenant is refused, default organization or not (A9, the fallback); the allowed web origins must
+  be explicit in production (B11).
+- **Housekeeping:** the dead signup page is removed and every request of the web app is checked against the API's routes (B10);
+  documentation drift is corrected and checked (B13).
+
+### What this version does not claim
+
+Three P1 findings are **accepted, not fixed**, each with an owner (Fatih): PR-1b (most web screens still have no tests), MS-1
+(behaviours that were never specified) and MS-2 (what a portfolio shows for a skill with no evidence). Six smaller findings stay
+open on purpose (A9b, B4, B7, B8, B12, MS-3), each with its reason in `assessment/01-audit.md`. No real language-model call was
+exercised.
+
+### Changes to know about when upgrading
+
+- **`APP_BASE_URL` must be the address of the web app.** A deployment that set it to the API's address must change it.
+- **`ALLOWED_ORIGINS` must list the web app's origin in production.** An empty value or `*` stops the boot with a message that
+  names the variable. Outside production `*` is still accepted.
+- **Unknown tenant:** a request that names a tenant the system does not know is answered 403, also where a default organization
+  exists.
+- **API:** deleting an assessment that has interviews answers 422; the portfolio read carries `not_assessed_skills`; unknown
+  routes answer a JSON 404. The additions are backward compatible.
+- **Web:** the signup page is removed (it could not work); a 403 no longer signs the user out.
+- **No database migration** in this version.
+
 ## v1.1.0
 
 **Status: see the release page of this tag.** The pipeline decides RELEASABLE or BLOCKED from data; this file states

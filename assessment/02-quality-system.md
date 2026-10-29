@@ -51,7 +51,7 @@ Nothing in the suite calls the language model. It is replaced by a fixed answer,
 also expects the call to happen, because the background job swallows its own errors and a silent failure would
 otherwise look like "nothing changed".
 
-56 examples, aimed at the paths where a silent failure corrupts data or leaks it across companies, not at coverage of
+56 examples when the first version was released and 91 now (the added ones are listed in section 2e), aimed at the paths where a silent failure corrupts data or leaks it across companies, not at coverage of
 trivial code:
 
 | File (examples) | Class of failure it catches | Audit item |
@@ -100,6 +100,34 @@ development mode, did not remove it from the published files; only the test show
 for any other name. All `VITE_` variables are copied into the bundle by a dependency, so the check covers the one name the
 code treats as a credential, and the rule that no secret goes into such a variable is by convention only.
 
+## 2e. Checks added with the smaller findings
+
+After the first two releases the remaining findings of the audit were fixed one at a time, each with its own spec (012 to 026).
+The checks they added, by what they protect:
+
+| Check | Where | Class of failure it catches |
+|---|---|---|
+| Unknown routes answer JSON; known routes unchanged | `api/spec/requests/unknown_routes_spec.rb` | An HTML error page, or a router that hides a missing route |
+| Deleting an assessment reports what happened | `assessment_delete_spec.rb` | A success answer for something that did not happen |
+| Portfolio regeneration is atomic and keeps overrides | `services/portfolio_regeneration_spec.rb` | A half portfolio, or a human decision deleted by a rebuild |
+| One fit/gap comparison per vacancy skill row | `services/fit_gap_duplicate_labels_spec.rb` | A requirement that silently disappears from a report |
+| The portfolio read lists skills that were not assessed | `requests/portfolio_not_assessed_spec.rb` | An unassessed skill indistinguishable from an unconfigured one |
+| An unknown tenant is refused, default organization or not | `requests/tenant_resolution_spec.rb` | A client's mistake served as a tenant nobody chose |
+| Every request the web app makes has an API route | `contracts/web_routes_spec.rb` | Web and API drifting apart (the class of A7 and B10) |
+| Every route a controller comment names exists | `contracts/route_comments_spec.rb` | Comments that describe routes that are not there |
+| The allowed origins are explicit in production | `spec/config/allowed_origins_spec.rb` | A copied sample opening the API to every site |
+| The invite link opens the web app, and its settings agree | `models/session_invite_url_spec.rb` | Candidates sent to a route the API does not have |
+| Readme, sample configuration and web project agree | `tools/docs-consistency.test.js` | Instructions that describe something that is not there |
+| The HTTP client signs out only on a 401 of a signed-in request | `web/src/services/api.test.ts` | Loops and lost error messages after a 403 or a refused login |
+| The candidate page never shows "complete" for a failed load | `pages/interview/InterviewPage.test.tsx` | A candidate told the interview was recorded when it was not |
+| Pages say why a record could not be loaded | the page tests of specs 016 and 017 | Empty forms and pages for a record that cannot be loaded |
+| The fit/gap page shows an update in progress or a failure | `pages/fitgap/FitGapReportStatus.test.tsx` | A report that changes or fails with no sign on screen |
+| The portfolio page shows what was not assessed | `pages/portfolio/PortfolioNotAssessed.test.tsx` | The same, on the page |
+
+Totals when this was written: 91 API examples, 32 web tests and 38 gate tests. Two of the checks read across the stack and run in
+`API tests` because it checks out the whole repository: the web requests against the routes, and the web service files against
+the router.
+
 ## 3. The net against what the audit found
 
 The net would have caught the audit's defects before a human looked:
@@ -116,8 +144,8 @@ The net would have caught the audit's defects before a human looked:
 
 ## 4. What the net does not cover
 
-- **Most of the web app has no tests.** Only the fit/gap table, where the token comes from and the production bundle are covered; any other web regression goes unnoticed.
-- **Only one contract exists** (the fit/gap read). Other responses that the web reads by hand-written types, such as the portfolio, have no sample and no test; that is the class of bug behind A7.
+- **Most of the web app is still untested.** The tests listed in section 2e and the fit/gap table, the login token source and the production bundle are covered; the audio hooks, the hardware check, the forms and the other screens are not, and a regression there goes unnoticed.
+- **Only one response has a sample** (the fit/gap read); requests are checked against the routes (section 2e) but not their bodies. Other responses that the web reads by hand-written types, such as the portfolio, have no sample and no test; that is the class of bug behind A7.
 - **Traceability proves presence, not quality.** The release gate (section 4b) checks both ways that every criterion has
   a test and every tagged test points at a real criterion. It cannot tell whether the test is a good one. A criterion is exempt from needing
   a test only with the exact marker `Verified by:`, but the gate cannot check that the pipeline really verifies it.
@@ -148,7 +176,7 @@ read its input blocks. Run by hand with a version, the same pipeline is a dry ru
 ## 5. Red to green
 
 One row per defect. "Red" is a CI run that failed on the commit that added the tests; "green" is the run on the commit
-that fixed it. Run ids are those of the `API tests` job, except in the last four rows, where the failing jobs differ and are named.
+that fixed it. Run ids are those of the `API tests` job, except in the rows that name another job (`Web build` or the gate tests).
 
 | Defect | Spec | Red (commit, run, result) | Green (commit, run, result) | Note |
 |---|---|---|---|---|
@@ -162,9 +190,26 @@ that fixed it. Run ids are those of the `API tests` job, except in the last four
 | PR-2 no web lockfile | 009 | `9334d73`, 40850212863 and 40850212963, 2 of 33 gate tests failed and `npm ci` refused to run | `9ca38be`, 40850385571 and 40850385481, 33 of 33 and a clean install and build | Pull request #17. The fix is the lockfile itself. |
 | A7 empty required column, no override flag, gate blind to web tests | 010 | `7ff110f`, 40854365743 (web), 40854365637 (API, 2 of 58 failed), 40854365805 (gate, 1 of 34 failed) | `baee822`, 40855517854 (web, 2 of 2), 40855517846 (API, 58 of 58), 40855517838 (gate, 34 of 34) | Pull request #20. One test, the override marker in the table, was green from the start: it guards a path that already worked. |
 | A8 development token in the production bundle | 011 | `d923281`, 40857524228 (web, 2 of 7 failed) | `ff21371`, 40857824931 (web, 7 of 7) | Pull request #22. The first fix, in the app code only, left the bundle test red; the second part is in the build configuration. Two other jobs of the same commits passed and are not listed. |
+| B1 unknown routes (API) | 012 | `68d3091`, 40918410622, 5 of 6 failed | `b9e3acc`, 40918607943 | Pull request #25. The change that pull request #3 shows blocked, this time with a spec and tests. |
+| B2 delete reports success | 013 | `15c60a6`, 40919286577, 1 of 67 failed | `f79d305`, 40919454554 | Pull request #26. |
+| B5 sign-out on every 401 and 403 (web) | 014 | `b0ad3e5`, 40920297320 (web, 2 of 10 failed) | `e09a0c1`, 40920415923 (web) | Pull request #27. Jobs: `Web build`. |
+| B6 failed load shown as complete (web) | 015 | `d9a9854`, 40921209878 (web, 1 of 13 failed) | `809cb84`, 40921602307 (web) | Pull request #28. A second commit changed only how my test produced the rejection, with the assertions unchanged, and is disclosed in the pull request. |
+| B1 empty forms for a missing record (web) | 016 | `34b1691`, 40922210553 (web, 4 of 18 failed) | `d6b5f34`, 40922352669 (web) | Pull request #29. |
+| B1 report pages (web) | 017 | `d94fca6`, 40923133264 (web, 5 of 25 failed) | `e6e45db`, 40923275388 (web) | Pull request #30. |
+| B9 duplicate labels in fit/gap | 018 | `51beee5`, 40923629690, 1 of 69 failed | `7dddc8c`, 40923774486 | Pull request #31. |
+| B3 portfolio regeneration | 019 | `6bf5b18`, 40924233887, 2 of 73 failed | `b09f925`, 40924377914 | Pull request #32. |
+| A6-UI fit/gap page status | 020 | `ab01771`, 40925324589 (web, 4 of 30 failed) | `bfefa64`, 40925441227 (web) | Pull request #33. |
+| A4-UI not assessed skills | 021 | `a531782`, 40925818169 (API, 2 of 75) and 40925818210 (web, 1 of 32) | `4c30d9a`, 40925958986 (API) and 40925958895 (web) | Pull request #34. |
+| A9 unknown tenant fallback | 022 | `852a682`, 40928639907, 1 of 79 failed | `f0ad76f`, 40928793955 | Pull request #35. Three of its four examples guard what already worked, and the spec says so. |
+| B10 web calls without a route | 023 | `90921d6`, 40929238090, 1 of 81 failed | `e2a0aee`, 40929317746 | Pull request #36. The check names the one request, POST /signup. |
+| B11 allowed origins | 024 | `8051a0b`, 40929784885, spec did not load | `9ee40f4`, 40929898570 | Pull request #37. |
+| B14 invite link points at the API | 025 | `d4136e5`, 40930803921, 3 of 90 failed | `a8189ea`, 40930982328 | Pull request #38. |
+| B13 documentation drift | 026 | `3f3674c`, 40931496146 (gate, 4 failed) and 40931496427 (API, 1 failed) | `e1f68de`, 40931705561 (gate) and 40931705577 (API) | Pull request #39. |
 
-No check was made green by deleting or weakening it. The one change to a test after its red run, `be62f78`, fixed a
-reference that could not resolve and left every assertion as it was. Every pull request is merged with a merge commit,
+No check was made green by deleting or weakening it. Three tests were changed after their red run, and each left every
+assertion as it was: `be62f78` fixed a reference that could not resolve; `824d76c` changed how a test produced a rejected
+request, because this version of the test runner fails a test whose mock returns a rejected promise; and the web test of
+spec 011 was rewritten from `it.each` to a loop in pull request #23 so the release check could read its tag. Every pull request is merged with a merge commit,
 never squashed, so both runs stay in the history.
 
 **Mistakes of mine that the process caught**, because honesty beats green:

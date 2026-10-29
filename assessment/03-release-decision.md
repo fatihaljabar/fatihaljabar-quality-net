@@ -164,3 +164,37 @@ without an owner blocks.
 **What the gate still cannot see** (unchanged from section 4): the language model itself, the live audio path, a migration on
 production data, deployment and load, and whether a finding is rated correctly. It also cannot judge whether an acceptance is
 wise; it only refuses an acceptance that has no owner.
+
+## 11. Decision for v1.2.0: releasable with the same accepted risks
+
+| | |
+|---|---|
+| **Decision** | **RELEASABLE WITH ACCEPTED RISKS**, the same three as v1.1.0: PR-1b, MS-1 and MS-2. No P1 finding is open. |
+| Gate verdict | RELEASABLE as read by `tools/release-check.js`; the run on the tag must say the same, and this document is wrong if it does not. |
+| Decision owner | Fatih |
+
+**What changed since v1.1.0.** The smaller findings of the audit were fixed, each with a failing test pushed before the fix (the
+list is in section 11 of `01-audit.md`), and one more P1 was found and fixed on the way: **B14**, candidate invite links that
+opened the API instead of the web app. It was found while checking the documentation, was fixed in the same way as the others
+and is marked Fixed in the audit. It also shows why the finding stayed on the list: with the documented configuration, the
+main objective of the product (a candidate reaching the interview) was only met if someone set one variable by hand.
+
+**What is not the same as before.**
+
+- PR-1b stays accepted, but the reason is narrower: the web app now has tests for the places where a defect was found and a
+  check that every request it makes has an API route; the audio hooks, the hardware check, the forms and the other screens are
+  still untested.
+- MS-1 and MS-2 are unchanged. They still need product decisions.
+- Six smaller findings remain open on purpose (A9b, B4, B7, B8, B12, MS-3), each with its reason in the audit.
+
+**Read this before deploying.** Four changes touch configuration and behaviour that an operator would notice:
+
+1. `APP_BASE_URL` must be the address of the web app, because it builds the candidate invite links. A deployment that set it to the
+   API's address must change it, or candidates keep landing on the API.
+2. `ALLOWED_ORIGINS` must list the web app's origin in production. An empty value or `*` now stops the boot with a message that names
+   the variable.
+3. A request that names an unknown tenant is refused with 403, even where a default organization exists.
+4. Deleting an assessment that has interviews answers 422 instead of reporting success.
+
+**What the gate still cannot see** is unchanged (section 4): the language model itself, the live audio path, a migration on real
+data, deployment and load, and whether a finding is rated correctly.

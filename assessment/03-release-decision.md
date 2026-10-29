@@ -24,9 +24,9 @@ The release gate runs on a version tag. It runs the same net as every pull reque
 
 | Check | How | Result for v1.0.0 |
 |---|---|---|
-| Tests | 56 API examples and 29 gate tests, run by the same workflows as a pull request. | **Pass** |
+| Tests | 56 API examples and 31 gate tests, run by the same workflows as a pull request. | **Pass** |
 | Open P0 and P1 findings | Reads the ranked table in `assessment/01-audit.md`: 14 rows are P0 or P1. | **Blocked:** 8 fixed, 1 accepted with an owner, **5 open** |
-| Traceability, both ways | Every acceptance criterion of every spec has a test tagged `[NNN/AC-n]`, and every tag names a real criterion. 48 criteria in eight specs. | **Pass:** 45 have a tagged test, 3 are verified by the pipeline |
+| Traceability, both ways | Every acceptance criterion of every spec has a test tagged `[NNN/AC-n]`, and every tag names a real criterion. 49 criteria in eight specs. | **Pass:** 46 have a tagged test, 3 are verified by the pipeline |
 | Release notes | `RELEASE_NOTES.md` has a section for the version. | **Pass** |
 | Unreadable input | A table the gate cannot read blocks instead of passing. | Not triggered |
 

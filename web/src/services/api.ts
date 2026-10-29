@@ -18,7 +18,8 @@ api.interceptors.request.use((config) => {
 });
 
 // Unwrap backend envelope: { data: { ... } } → { ... }
-// On 401/403, clear stored credentials and redirect to login.
+// A 401 on a request made with a session clears the stored credentials and redirects to login. A 403 means "not allowed",
+// not "signed out", and a refused login must reach the login page so it can show why (spec 014).
 api.interceptors.response.use(
   (response) => {
     if (response.data && typeof response.data === "object" && "data" in response.data) {
@@ -27,7 +28,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401 && !String(error.config?.url ?? "").endsWith("/auth/login")) {
       clearToken();
       window.location.href = "/login";
     }

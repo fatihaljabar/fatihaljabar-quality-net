@@ -111,14 +111,18 @@ function renderReport(result, tag) {
   return out.join('\n') + '\n';
 }
 
+// Every place a criterion can be tested: the API specs, the gate's own tests and the web tests (spec 010, AC-6).
+function testFiles(root) {
+  const under = (dir, pattern) => (existsSync(join(root, dir)) ? readdirSync(join(root, dir), { recursive: true }) : [])
+    .filter((f) => pattern.test(f)).map((f) => join(dir, f));
+  return [...under('api/spec', /_spec\.rb$/), ...under('tools', /\.test\.js$/), ...under('web/src', /\.test\.tsx?$/)];
+}
+
 function collect(root) {
   const read = (p) => readFileSync(join(root, p), 'utf8');
   const specs = readdirSync(join(root, 'specs')).filter((f) => /^\d{3}-.*\.md$/.test(f))
     .map((f) => ({ id: f.slice(0, 3), text: read(join('specs', f)) }));
-  const files = [
-    ...readdirSync(join(root, 'api/spec'), { recursive: true }).filter((f) => f.endsWith('_spec.rb')).map((f) => join('api/spec', f)),
-    ...readdirSync(join(root, 'tools')).filter((f) => f.endsWith('.test.js')).map((f) => join('tools', f)),
-  ];
+  const files = testFiles(root);
   return {
     audit: read('assessment/01-audit.md'),
     specs,
@@ -143,4 +147,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { evaluate, renderReport, parseAudit };
+module.exports = { evaluate, renderReport, parseAudit, testFiles };

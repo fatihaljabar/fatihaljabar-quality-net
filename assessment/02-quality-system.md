@@ -74,6 +74,15 @@ says which spec it belongs to.
 test catches it; and the original attack is replayed on running code. Several times this caught my own mistakes, listed
 in section 5.
 
+## 2b. The web install check
+
+Job `Web build` (spec 009) installs the web app with `npm ci --ignore-scripts` and builds it. `npm ci` refuses to run
+without a lockfile and fails when the lockfile and `package.json` disagree, so an install can no longer drift. Two tests
+in `Gate tests` read the lockfile: it must record exactly the dependencies of `package.json`, and every locked package
+must come from the public registry with an integrity hash. What this does **not** do: judge whether the pinned versions
+are safe, update them, or test the app (that is the harness still missing, section 4). Like `API tests` it has no path
+filter, so it can be made a required check; it is not required yet.
+
 ## 3. The net against what the audit found
 
 The net would have caught the audit's defects before a human looked:
@@ -84,7 +93,8 @@ The net would have caught the audit's defects before a human looked:
 | A1, A2 company isolation | `API tests`, isolation and login specs. |
 | A3, A4, A5, A6 | `API tests`, the files in the table above. |
 | PR-1 no inputs, no tests | The gate, and `API tests`. |
-| A7 field mismatch between web and API, A8 token in the bundle, PR-2 no lockfile | **Not yet.** There is no web test harness (section 4). |
+| PR-2 no lockfile | `Gate tests` (two tests on the lockfile) and `Web build` (`npm ci`), see section 2b. |
+| A7 field mismatch between web and API, A8 token in the bundle | **Not yet.** There is no web test harness (section 4). |
 
 ## 4. What the net does not cover
 
@@ -120,7 +130,7 @@ read its input blocks. Run by hand with a version, the same pipeline is a dry ru
 ## 5. Red to green
 
 One row per defect. "Red" is a CI run that failed on the commit that added the tests; "green" is the run on the commit
-that fixed it. Run ids are those of the `API tests` job, except in the last row, which is the `Gate tests` job.
+that fixed it. Run ids are those of the `API tests` job, except in the last two rows, which are the `Gate tests` and `Web build` jobs.
 
 | Defect | Spec | Red (commit, run, result) | Green (commit, run, result) | Note |
 |---|---|---|---|---|
@@ -131,6 +141,7 @@ that fixed it. Run ids are those of the `API tests` job, except in the last row,
 | A5 covered without judgement | 006 | `b413f72`, 40744779569, 2 of 41 failed | `2ca89fa`, 40746182960, 41 of 41 | |
 | A6 fit/gap regeneration | 007 | `52eb069`, 40748070986, 14 of 56 failed | `0b5c19e`, 40749209203, 56 of 56 | A correction to my own tests sits between them: `be62f78`. |
 | Release gate exempts a criterion that only mentions the marker words | 008 (AC-10) | `a02980e`, 40847104962, 2 of 31 gate tests failed | `449a50c`, 40847607071, 31 of 31 | A flaw in the gate itself (pull request #15), found by running it on its own documents. |
+| PR-2 no web lockfile | 009 | `9334d73`, 40850212863 and 40850212963, 2 of 33 gate tests failed and `npm ci` refused to run | `9ca38be`, 40850385571 and 40850385481, 33 of 33 and a clean install and build | Pull request #17. The fix is the lockfile itself. |
 
 No check was made green by deleting or weakening it. The one change to a test after its red run, `be62f78`, fixed a
 reference that could not resolve and left every assertion as it was. Every pull request is merged with a merge commit,

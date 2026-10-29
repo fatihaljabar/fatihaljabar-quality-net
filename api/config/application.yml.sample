@@ -17,8 +17,8 @@ GEMINI_LIVE_MODEL: "gemini-2.0-flash-live-001"
 GEMINI_FLASH_MODEL: "gemini-2.0-flash-001"
 GEMINI_PRO_MODEL: "gemini-2.0-pro-001"
 
-# App URL (for invite links)
-APP_BASE_URL: "http://localhost:3001"
+# Address of the web app, used to build invite links (the interview page lives there, not in the API)
+APP_BASE_URL: "http://localhost:5173"
 
 # Token settings (should match core-api)
 TOKEN_EXPIRATION_TIME: "259200"  # 3 days in seconds

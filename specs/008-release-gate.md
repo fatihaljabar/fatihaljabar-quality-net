@@ -74,7 +74,8 @@ Assumptions (no spec existed, to be confirmed by product):
   then a status job runs the check and creates or updates the GitHub release for the tag. The release title carries the
   verdict, the body holds the report, a blocked version is marked as a pre-release and never as the latest, and the job
   fails when BLOCKED so the run on the tag is red. Actions are pinned by commit SHA; permissions are read-only except
-  in the job that writes the release.
+  in the job that writes the release. Run by hand (`workflow_dispatch` with a version) the same pipeline is a dry run: it
+  reaches the same verdict and publishes nothing, so a version can be checked before it is tagged.
 - Tests: `tools/release-check.test.js` on `node:test`, one named test per criterion tagged `[008/AC-n]`; the gate's
   own test job runs it.
 - Known limits: the verdict is only as honest as the audit table, which is edited by hand. The check proves a test

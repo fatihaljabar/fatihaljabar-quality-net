@@ -1,0 +1,42 @@
+{
+  "id": 1,
+  "portfolio_id": 1,
+  "vacancy_id": 1,
+  "skill_comparisons": [
+    {
+      "skill_label": "Ruby",
+      "skill_id": "ruby",
+      "candidate_level": 4,
+      "expected_level": 3,
+      "result": "exceed",
+      "delta": 1,
+      "confidence": "high",
+      "is_override": true
+    },
+    {
+      "skill_label": "Testing",
+      "skill_id": null,
+      "candidate_level": 2,
+      "expected_level": 3,
+      "result": "gap",
+      "delta": -1,
+      "confidence": "medium",
+      "is_override": false
+    },
+    {
+      "skill_label": "Design",
+      "skill_id": null,
+      "candidate_level": null,
+      "expected_level": 3,
+      "result": "not_assessed",
+      "delta": null,
+      "confidence": null,
+      "is_override": false
+    }
+  ],
+  "culture_narrative": "Sample narrative.",
+  "overall_narrative": "Sample narrative.",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "generation_status": "complete",
+  "generation_error": null
+}

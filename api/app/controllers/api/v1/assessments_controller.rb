@@ -49,7 +49,9 @@ module Api
 
       # DELETE /api/v1/assessments/:id
       def destroy
-        @assessment.destroy
+        # The model refuses to delete an assessment that has sessions; say so instead of reporting success (spec 013).
+        return json_error(@assessment.errors.full_messages.to_sentence, :unprocessable_entity) unless @assessment.destroy
+
         json_response({ message: "Assessment deleted" })
       end
 

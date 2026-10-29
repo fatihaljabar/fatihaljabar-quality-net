@@ -205,6 +205,21 @@ export default function PortfolioPage() {
               ))}
           </div>
 
+          {/* Configured skills the interview never reached (spec 021) */}
+          {(portfolio.not_assessed_skills?.length ?? 0) > 0 && (
+            <div className="space-y-2 rounded-lg border border-dashed p-4">
+              <h2 className="text-sm font-semibold">Not assessed</h2>
+              <p className="text-xs text-muted-foreground">
+                The interview did not reach these skills, so no level is stated for them.
+              </p>
+              <ul className="text-sm list-disc pl-5">
+                {portfolio.not_assessed_skills!.map((skill) => (
+                  <li key={skill.skill_label}>{skill.skill_label}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Discovered skills */}
           {portfolio.skills.some((s) => s.is_discovered) && (
             <>

@@ -83,6 +83,7 @@ export interface Portfolio {
   generation_error?: string;
   skills: PortfolioSkill[];
   overrides: AssessorOverride[];
+  not_assessed_skills?: { skill_id?: string | null; skill_label: string }[];
 }
 
 export interface PortfolioSkill {

@@ -168,8 +168,18 @@ module Api
           generated_at:      portfolio.generated_at,
           generation_error:  portfolio.generation_error,
           skills:            portfolio.portfolio_skills.map(&method(:portfolio_skill_json)),
-          overrides:         portfolio.assessor_overrides.map(&method(:override_json))
+          overrides:         portfolio.assessor_overrides.map(&method(:override_json)),
+          not_assessed_skills: not_assessed_skills(portfolio)
         }
+      end
+
+      # Configured skills of the assessment that have no stored, non discovered result (spec 021). Matched by skill id or by
+      # label ignoring case, as the generator matches them.
+      def not_assessed_skills(portfolio)
+        stored = portfolio.portfolio_skills.reject(&:is_discovered)
+        portfolio.session.assessment.assessment_skills.order(:display_order).reject do |skill|
+          stored.any? { |s| (skill.skill_id.present? && s.skill_id == skill.skill_id) || s.skill_label.downcase == skill.skill_label.downcase }
+        end.map { |skill| { skill_id: skill.skill_id, skill_label: skill.skill_label } }
       end
 
       def portfolio_skill_json(skill)

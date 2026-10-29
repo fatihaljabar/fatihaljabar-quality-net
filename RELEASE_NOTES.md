@@ -1,5 +1,42 @@
 # Release notes
 
+## v1.1.0
+
+**Status: see the release page of this tag.** The pipeline decides RELEASABLE or BLOCKED from data; this file states
+what the version claims, not whether it passed. The call, the two risks that were accepted instead of fixed, their owner
+and the conditions are in `assessment/03-release-decision.md`, section 10.
+
+### What this version claims to deliver
+
+Everything in v1.0.0, plus three more P1 findings fixed and guarded by a test that failed before the fix and passes after:
+
+- **The fit/gap table shows the required level** (A7). The web app followed a field name the API does not send. The API now
+  also sends the flag for a level changed by an assessor, so the override marker appears.
+- **A development login token never reaches a production build** (A8). The cause was deeper than the build setting: a
+  dependency copies every `VITE_` variable into the public files, so the build now defines that one variable as undefined
+  and the app reads it only in development mode.
+- **Web installs are reproducible** (PR-2): a committed lockfile, installed with `npm ci` by the `Web build` job.
+
+The quality net grew with them: the web app has a test runner, run on every pull request next to the build; the web and the
+API are tested against one shared sample of the fit/gap read; and the release gate reads web tests too.
+
+### What this version does not claim
+
+Two P1 findings are **accepted, not fixed**, each with an owner (Fatih):
+
+- **PR-1b:** most web pages have no tests. Only the fit/gap table, the source of the login token and the production bundle do.
+- **MS-1:** several behaviours were never specified (roles, signup, vacancies, retention of candidate transcripts and
+  audio, editing an assessment after interviews). They await a product decision.
+
+The P2 and P3 items listed in `assessment/01-audit.md` are also open. No real language-model call was exercised.
+
+### Changes to know about when upgrading
+
+- **API:** each comparison in the fit/gap read now carries `is_override`. The change is additive.
+- **Web:** `VITE_DEV_TOKEN` is ignored by production builds; it still works with `npm run dev`. The web app now has
+  `npm test`, and its dependencies are installed from a lockfile.
+- **No database migration** in this version.
+
 ## v1.0.0
 
 **Status: see the release page of this tag.** The pipeline decides RELEASABLE or BLOCKED from data; this file states

@@ -62,6 +62,10 @@ Assumptions (no spec existed, to be confirmed by product):
   exact spelling and the colon that the design plan defines,
   When the release check runs and no test is tagged with that criterion,
   Then the verdict is BLOCKED and names the criterion; only the exact marker exempts a criterion from needing a test.
+- **AC-11** Given a RELEASABLE verdict in which some P0 or P1 rows are accepted,
+  When the report is written,
+  Then its first sentence says that the version is releasable with that many accepted risks and is not a clean release, instead of
+  saying that it passed every check; with no accepted risk the report is unchanged.
 
 ## Design Plan
 

@@ -99,7 +99,10 @@ function evaluate({ audit, specs, tests, notes, tag, testsPassed }) {
 function renderReport(result, tag) {
   const out = [`# ${tag}: ${result.verdict}`, ''];
   if (result.verdict === 'RELEASABLE') {
-    out.push('This version passed every release check: the tests, the open findings, the traceability of the specs and the release notes.');
+    const n = result.accepted.length;
+    out.push(n
+      ? `Releasable with ${n} accepted risk${n === 1 ? '' : 's'}. It is not a clean release: each risk below was accepted in writing by a named owner instead of being fixed, and every other check passed (the tests, the open findings, the traceability of the specs and the release notes).`
+      : 'This version passed every release check: the tests, the open findings, the traceability of the specs and the release notes.');
   } else {
     out.push('**This version must not be released.** The reasons are below; fix them or accept the risk in writing with an owner.', '', '## Why it is blocked');
     for (const r of result.reasons) out.push(`- (${r.ac}) ${r.message}`);

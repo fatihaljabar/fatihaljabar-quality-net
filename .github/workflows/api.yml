@@ -17,8 +17,9 @@ jobs:
   api-tests:
     name: API tests
     runs-on: ubuntu-latest
+    # The caller's workflow name keeps a release dry run from sharing a group with the pushes to main (spec 027).
     concurrency:
-      group: api-${{ github.ref }}
+      group: api-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     services:
       postgres:

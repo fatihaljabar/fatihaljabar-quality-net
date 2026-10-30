@@ -162,3 +162,20 @@ test('[010/AC-6] collects the web tests too, so a criterion tested only there co
   assert.deepEqual(testFiles(root).sort(),
     ['api/spec/a_spec.rb', 'tools/b.test.js', 'web/src/components/c.test.tsx', 'web/src/d.test.ts']);
 });
+
+test('[008/AC-11] says a releasable version carries its accepted risks instead of claiming it passed everything', () => {
+  const accepted = verdict({ audit: auditWith(['A7', 'P1', '**Accepted** owner: Fatih, reason: display only'], ['A8', 'P1', '**Accepted** owner: Fatih, reason: build only']) });
+  const lines = renderReport(accepted, 'v1.0.0').split('\n');
+
+  assert.match(lines[0], /RELEASABLE/);
+  assert.match(lines[2], /2 accepted risks/);
+  assert.match(lines[2], /not a clean release/i);
+  assert.doesNotMatch(lines[2], /passed every release check/);
+});
+
+test('[008/AC-11] keeps the plain sentence when nothing is accepted', () => {
+  const lines = renderReport(verdict(), 'v1.0.0').split('\n');
+
+  assert.match(lines[2], /passed every release check/);
+  assert.doesNotMatch(lines[2], /accepted/i);
+});

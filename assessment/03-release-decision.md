@@ -1,12 +1,23 @@
-# 03. Release decision: v1.0.0
+# 03. Release decisions
+
+Three versions were put through the release gate. The latest decision is the one that stands.
+
+| Version | Decision | Where |
+|---|---|---|
+| **v1.2.0** (latest) | **RELEASABLE WITH 3 ACCEPTED RISKS** | section 11 |
+| v1.1.0 | RELEASABLE WITH 3 ACCEPTED RISKS | section 10 |
+| v1.0.0 | **BLOCKED**: five open P1 findings | sections 1 to 9 |
+
+Decision owner for all three: Fatih, as the owner of the engineering quality gate. Sections 1 to 9 describe v1.0.0 as it was
+tagged and stay as they were; sections 10 to 12 say what changed afterwards. "Accepted risk" means a P1 finding that was not fixed
+and is listed with a named owner; it is never a clean release.
+
+## v1.0.0: BLOCKED (decided 2026-10-29)
 
 | | |
 |---|---|
 | **Decision** | **BLOCKED. Do not release this version to a client.** |
-| Gate verdict | BLOCKED, five open P1 findings. Dry run on `main`: [run 40841198699](https://github.com/fatihaljabar/fatihaljabar-quality-net/actions/runs/40841198699). The run on the tag must give the same verdict. |
-| Date | 2026-10-29 |
-| Decision owner | Fatih, as the owner of the engineering quality gate |
-| Later version | **v1.1.0**: see section 10. v1.0.0 stays blocked; v1.1.0 is releasable only with two accepted risks. |
+| Gate verdict | BLOCKED, five open P1 findings. Dry run on `main`: [run 40841198699](https://github.com/fatihaljabar/fatihaljabar-quality-net/actions/runs/40841198699). The run on the tag gave the same verdict. |
 
 ## 1. The call, in plain words
 
@@ -94,13 +105,13 @@ MS-2.**
 The gate is reusable: nothing in it changes for the next version. When a finding is fixed, its row says Fixed; the
 gate then reads RELEASABLE on its own. The work, in the order of section 3: web harness with the contract test (A7,
 PR-1b), the build check (A8), the lockfile (PR-2), then the specs for MS-1. Each follows the same loop as the fixes already
-made: a spec, a test that fails for the right reason, the fix, and a run that passes.
+made: a spec, a test that fails for the right reason, the fix, and a run that passes. That is what happened: sections 9 to 11.
 
 ## 7. How to read the status
 
-- **On GitHub:** open the release page for the tag. Its title says `v1.0.0: BLOCKED` or `v1.0.0: RELEASABLE`, and the body
-  lists the reasons. A blocked version is marked as a pre-release and never as the latest one, and the run on the tag is red.
-- **Before tagging:** `node tools/release-check.js --tag v1.0.0 --tests passed` gives the same decision on any machine.
+- **On GitHub:** open the release page for the tag. Its title says `v1.x.x: BLOCKED` or `v1.x.x: RELEASABLE`, and the body
+  lists the reasons; for a releasable version with accepted risks its first sentence says "Releasable with N accepted risks. It is not a clean release". A blocked version is marked as a pre-release and never as the latest one, and the run on the tag is red.
+- **Before tagging:** `node tools/release-check.js --tag v1.2.0 --tests passed` (any version) gives the same decision on any machine.
 - **If the run on the tag disagrees with this document,** this document is wrong and must be corrected, not the run.
 
 ## 8. What I got wrong on the way
@@ -113,29 +124,21 @@ and was believed.
 
 ## 9. Update after the tag
 
-This decision describes `v1.0.0` as tagged (commit `c0ebdbe`), and its release page still says what it said. After the
-tag, PR-2 was fixed on `main` (pull request #17, spec 009: a committed lockfile, two tests on it and a `Web build` job that
-installs with `npm ci`). The audit now lists four open P1 findings (A7, A8, PR-1b, MS-1), and the verdict for the next
-version is still BLOCKED. On `main` after that change there are 33 gate tests and 52 criteria in nine specs (48 with a tagged test, 4 verified by the pipeline); the figures in
-section 2 are those of the tag.
+This decision describes `v1.0.0` as tagged (commit `c0ebdbe`), and its release page still says what it said. Afterwards three of
+the five blocking findings were fixed: PR-2 (pull request #17, a committed lockfile installed with `npm ci`), A7 (pull request #20,
+the table follows the API, the API sends the override flag, and both sides are tested against one shared sample) and A8 (pull request
+#22, the development token is never given to a build and a test builds the app and searches the output). The figures in section 2 are
+those of the tag; the later versions have their own sections.
 
-After that, A7 was fixed too (pull request #20, spec 010: the table follows the API, the API sends the override flag, a
-shared sample of the fit/gap read is tested on both sides, and the release gate reads web tests). Three P1 findings are
-open now: A8, PR-1b (only the fit/gap table has web tests) and MS-1. The verdict for the next version is still BLOCKED.
+One more mistake of mine, caught by running the gate before writing a note: a web test for 011/AC-4 used a form the release check
+cannot read (`it.each`), so the gate briefly reported a criterion without a test. The test now uses a plain loop with the same cases
+and assertions; nothing was weakened.
 
-One more mistake of mine, caught by running the gate before writing this note: a web test for 011/AC-4 used a form that the
-release check cannot read (`it.each`), so after pull request #22 the gate briefly reported a criterion without a test. The
-test now uses a plain loop with the same cases and assertions; nothing was weakened.
-
-Then A8 was fixed (pull request #22, spec 011: the development token is never given to a build, and a test builds the
-app and searches the output). Two P1 findings are open now: PR-1b (only part of the fit/gap table, the token source and
-the bundle have web tests) and MS-1 (behaviours nobody specified). The verdict for the next version is still BLOCKED.
-
-## 10. Decision for v1.1.0: releasable with two accepted risks
+## 10. Decision for v1.1.0: releasable with three accepted risks
 
 | | |
 |---|---|
-| **Decision** | **RELEASABLE WITH ACCEPTED RISKS.** Not a clean release: two P1 findings are accepted, not fixed. |
+| **Decision** | **RELEASABLE WITH ACCEPTED RISKS.** Not a clean release: three P1 findings are accepted, not fixed (PR-1b and MS-1 in this version, MS-2 since v1.0.0). |
 | Gate verdict | RELEASABLE, read from the audit table and the specs by `tools/release-check.js`; the run on the tag must say the same, and this document is wrong if it does not. |
 | Decision owner | Fatih |
 
@@ -144,7 +147,7 @@ and passes after: A7 (the empty "Required" column), A8 (the development token in
 other two, PR-1b and MS-1, were not fixed. They are accepted in the audit table with a named owner, which is the only way
 the gate lets a P1 through. The gate lists them on the release page.
 
-**The two accepted risks, in plain words.**
+**The two risks accepted in this version, in plain words** (the third, MS-2, was accepted in v1.0.0, see section 2).
 
 | ID | What is not covered | Who is hurt | Why accepted instead of fixed | Conditions I recommend |
 |---|---|---|---|---|
@@ -198,3 +201,10 @@ main objective of the product (a candidate reaching the interview) was only met 
 
 **What the gate still cannot see** is unchanged (section 4): the language model itself, the live audio path, a migration on real
 data, deployment and load, and whether a finding is rated correctly.
+
+## 12. After v1.2.0
+
+Two flaws of the gate itself were found and fixed without a new tag (pull requests #41 and #42, specs 008 AC-11 and 027): the report
+of a releasable version now says it carries its accepted risks instead of saying it passed every check, and a release dry run no
+longer cancels the `API tests` run of the merge commit on `main`. The published release pages were not edited, so the first
+sentence of the v1.1.0 and v1.2.0 pages is the old one; the next release or a dry run shows the new one.

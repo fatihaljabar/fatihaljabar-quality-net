@@ -36,6 +36,7 @@ around; a workflow or configuration change is not exempt and needs a spec too.
 | #3, a JSON 404 for unknown routes, written the way a rushed change is (no spec, no test) | The gate firing red | `BLOCKED [AC-1]` no spec link and `BLOCKED [AC-4]` production code without a test. Run 40701801279. Never merged. |
 | #2, the gate itself, with its spec and tests | The gate passing | `PASSED (spec: specs/001-quality-gate.md)`. Run 40700323153. |
 | #10, the audit report | The path exemption | `PASSED (only exempt paths changed)`. |
+| #25, the same JSON 404 change as #3, with a spec and tests | The change that was blocked, done with its inputs | Red on the tests first, then green and merged. |
 
 **What it protects:** nobody can merge a code change that has no written criteria and no test.
 **What it deliberately does not do:** judge whether a spec is any good. A section containing only a placeholder passes;
@@ -80,7 +81,7 @@ Job `Web build` (spec 009) installs the web app with `npm ci --ignore-scripts` a
 without a lockfile and fails when the lockfile and `package.json` disagree, so an install can no longer drift. Two tests
 in `Gate tests` read the lockfile: it must record exactly the dependencies of `package.json`, and every locked package
 must come from the public registry with an integrity hash. What this does **not** do: judge whether the pinned versions
-are safe, update them, or test the app (that is the harness still missing, section 4). Like `API tests` it has no path
+are safe, update them, or test the app (that is section 2c). Like `API tests` it has no path
 filter, and it is a required check on `main` since it was added to the branch protection after pull request #17.
 
 ## 2c. Web tests and the contract with the API
@@ -102,7 +103,7 @@ code treats as a credential, and the rule that no secret goes into such a variab
 
 ## 2e. Checks added with the smaller findings
 
-After the first two releases the remaining findings of the audit were fixed one at a time, each with its own spec (012 to 026).
+After the first release the remaining findings of the audit were fixed one at a time, each with its own spec (012 to 026; spec 027 is about the gate itself, see section 4b).
 The checks they added, by what they protect:
 
 | Check | Where | Class of failure it catches |
@@ -141,6 +142,7 @@ The net would have caught the audit's defects before a human looked:
 | PR-2 no lockfile | `Gate tests` (two tests on the lockfile) and `Web build` (`npm ci`), see section 2b. |
 | A7 field mismatch between web and API | `Web build` (table test) and `API tests` (contract spec), see section 2c. |
 | A8 token in the bundle | `Web build` (tests of the token source and of the real production build), see section 2d. |
+| B10, B11, B13, B14 web calls with no route, a copied sample, wrong instructions, invite links to the API | The route, configuration and documentation checks of section 2e. |
 
 ## 4. What the net does not cover
 
@@ -172,6 +174,12 @@ On a version tag (`v*.*.*`), `.github/workflows/release.yml` runs the same `API 
 The verdict is the title of the release page of that tag (`v1.0.0: BLOCKED` or `v1.0.0: RELEASABLE`), with the reasons
 in its body; a blocked version is a pre-release and never "latest", and the run on the tag is red. A gate that cannot
 read its input blocks. Run by hand with a version, the same pipeline is a dry run that publishes nothing.
+
+Two flaws of the gate itself were found after the releases and fixed with the usual loop: the report of a releasable version said
+it passed every check even when risks were accepted (it now says "Releasable with N accepted risks. It is not a clean
+release"; pull request #41), and a dry run from `main` cancelled the `API tests` run of the merge commit because the two shared a
+concurrency group (the group now includes the name of the starting workflow; pull request #42, proved by a dry run started while
+the push run was still going). The release pages already published were not edited.
 
 ## 5. Red to green
 
@@ -223,6 +231,13 @@ never squashed, so both runs stay in the history.
 - I assumed eager loading would be off in CI. It is on, and that is how A10 was found.
 - A first hypothesis (A9) turned out not to reproduce and was lowered from P1 to P2 in the audit.
 - I mis-stated a count in a pull request description and corrected it against the run output.
+- I assumed the bundler would drop an unused value, so the first fix of A8 was too small; the bundle test stayed red and showed
+  the real cause.
+- Two first attempts at a fix were wrong and the new tests rejected them: the candidate page stayed on its pre-start screen
+  because the screen I added came after it, and a rebuilt portfolio showed a stale list because an association was loaded before
+  the rows changed.
+- A script of mine that was meant to break and restore files failed silently twice (a variable holding several words); I
+  noticed because I read its output, restored the files from the commit and ran it again with checked copies.
 
 ## 6. Running and extending it
 

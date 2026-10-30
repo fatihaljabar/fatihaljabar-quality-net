@@ -2,7 +2,7 @@
 
 Scope: the API (`api/`) and the web app (`web/`), read together and run together locally.
 Severity language: the one in the brief, applied top to bottom, stopping at the first match.
-Every item ends with its **final status** (fixed or remaining). IDs are stable: `A` for risks that were ranked,
+Every item ends with its **final status**: Fixed, Accepted with a named owner, or Remaining. IDs are stable: `A` for risks that were ranked,
 `B` for smaller issues, `PR` and `MS` for missing inputs.
 
 ## 1. The five-minute version
@@ -30,18 +30,20 @@ What I found, in plain words:
 7. **Two web defects were found:** the fit/gap table showed an empty "Required" column because the web and the API name
    the field differently (A7, P1, fixed afterwards), and a development login token can end up inside the production
    bundle (A8, P1, also fixed afterwards).
+8. **One more P1 was found later,** while checking the documentation: candidate invite links opened the API, which has no
+   interview page, so a candidate reached the interview only if someone set one variable by hand. (B14, P1, fixed)
 
 Underneath all of it: there were no tests, no CI, no written acceptance criteria and no design plan for any feature,
 so nobody could say whether anything was correct. That is the real finding; the rest are its consequences.
 
 **Ship line.** Do not ship until the P0 and every P1 that touches data or other companies' data is fixed and guarded
-by an automated check. The first version assessed (v1.0.0) had the P0 and A1 to A6 fixed, each with a failing test
-committed before the fix and a passing run after, but A7, A8, the missing lockfile (PR-2), the missing web tests (PR-1b)
-and the undefined behaviours (MS-1) were open, so the honest answer was: **not ready to ship to a client.** Afterwards
-A7, A8 and PR-2 were fixed. What remains open is two risks that code cannot close: PR-1b (most web pages have no tests and
-no spec to test against) and MS-1 (behaviours that need a product decision). They are accepted in writing with a named
-owner and conditions, so the version after v1.0.0 can be called releasable **with those two risks, not without them**.
-The release decision (`03-release-decision.md`) states what is gated, who owns the remaining risk and under which conditions.
+by an automated check. v1.0.0, the first version assessed, had the P0 and A1 to A6 fixed, each with a failing test
+committed before the fix and a passing run after, but five P1 findings were open, so the honest answer was: **not ready to
+ship to a client.** Since then every P1 that code can close has been fixed (A7, A8, B14, PR-2). Three P1 risks remain, accepted
+in writing with a named owner and conditions, because code cannot close them: PR-1b (most web screens have no tests and no spec
+to test against), MS-1 (behaviours that need a product decision) and MS-2 (what a portfolio shows for a skill with no evidence).
+The later versions, v1.1.0 and v1.2.0, are therefore releasable **with those risks, not without them**. The release decision
+(`03-release-decision.md`) states what is gated, who owns the risk and under which conditions.
 
 ## 2. How the platform was assessed
 
@@ -61,7 +63,8 @@ The release decision (`03-release-decision.md`) states what is gated, who owns t
 | **Trust boundaries fail open** | Tenancy is enforced by convention (a default scope on three models; child tables have no tenant column; `unscoped` in several places) instead of by a mechanism that refuses by default. | A1, A2, A3, A9 |
 | **Model output is treated as data** | Rules the product defines exactly (confidence from the interview, "covered needs evidence", a level needs a basis) live in a prompt, while the code stores the answer. | A4, A5 |
 | **Delete first, rebuild asynchronously, no failed state** | A background rebuild can fail, and nothing records that or protects the old result. | A6, B3 |
-| **The web and API contract is hand-written** | Types are copied by hand, with `any` casts, and no test compares the two sides. | A7, B6 |
+| **The web and API contract is hand-written** | Types are copied by hand, with `any` casts, and no test compared the two sides (two checks now do: the fit/gap read against a shared sample, and every web request against the API routes). | A7, B10 |
+| **Documentation and configuration are never checked against the code** | A sample, a readme or a manifest says one thing and the code needs another, and nobody runs the instructions. | B11, B13, B14 |
 | **Tickets closed without evidence** | Closed tickets with unchecked acceptance criteria and no test, so the defect was free to return. | B1 |
 | **Nothing loaded the other environments** | No test or CI ever booted production or eager-loaded the code. | A10 |
 
@@ -109,7 +112,7 @@ not match it), **MS** missing or ambiguous spec (never defined), **PR** a missin
 The first column is the rank. Within a severity, items that touch data across companies come first, then data that is
 wrong underneath, then the rest. The first word of the final status is read by the release check
 (`tools/release-check.js`): Fixed, Remaining or Accepted. A fixed item carries no remainder; whatever is left over is its
-own row (A4-UI, A6-UI, PR-1b).
+own row (A4-UI, A6-UI, PR-1b, A9b).
 
 ## 5. The P0 and P1 items in detail
 
@@ -144,7 +147,7 @@ openly: some interviews will now run to the time limit instead of finishing earl
 
 **A6: the fit/gap report.** Fixed for data and API: a rebuild never deletes the report, it marks it pending, a second
 request while one is waiting queues nothing, a failed rebuild is recorded with its error, and the previous report stays
-readable. Remaining: the page does not yet show the failed or updating state.
+readable. The page half (A6-UI) was fixed afterwards and shows the updating and failed states.
 
 **A7 and A8 (both fixed).** A7 was a field-name mismatch between the two services (`expected_level` on the API,
 `required_level` in the web types and table), and the override marker never appeared because the API did not send its
@@ -156,10 +159,19 @@ app code alone left the test red; the build now defines that one variable as und
 development mode, and a test runs the real production build and searches its output. No secret belongs in any `VITE_`
 variable, because all of them are published.
 
+**B14: the invite link opens the API.** A candidate gets a link of the form `<base>/interview/<token>`. The interview page lives
+only in the web app, but the setting that builds the base address was documented, defaulted and deployed as the API's address:
+the readme calls it the "backend base URL", the sample and the code default use the API's port and the production manifest the
+API's domain. A link built from any of them lands on a route the API does not have. Found while checking the documentation for
+B13; the link built from the documented value answers 404 on the running API, and a ticket of the source project describes the
+same address. The objective of the product, a candidate reaching the interview, was met only if someone set one variable by
+hand, which is a P1 in the severity language of the brief. Fixed by making the setting mean the web app's address everywhere
+and by checking that the sample and the manifest agree with the allowed web origin.
+
 ## 6. Missing or ambiguous spec versus built wrong
 
-**Built wrong** (a definition exists and the build does not match): A10, A1 to A9, B1 (the tickets define the behaviour),
-B2, B3, B5 to B9, B11, B12, B13.
+**Built wrong** (a definition exists and the build does not match): A10, A1 to A9b, A4-UI, A6-UI, B1 (the tickets define the
+behaviour), B2, B3, B5 to B9, B11, B12, B13, B14.
 
 **Missing or ambiguous spec** (nobody defined it, so nobody can say what correct is): MS-1, MS-2, MS-3, B4 and B10.
 Each is a risk in its own right. The ones that mattered most:
@@ -186,8 +198,9 @@ required for a change to be ready to build. That is what the workflow gate in `0
 ## 8. Not covered by this audit
 
 The live model client and most of the audio websocket (reconnection, time limit, wrap-up), the prompt compiler beyond a
-skim, the PDF generator beyond checking that overrides are applied, the skill catalogue endpoints, most web pages
-(interview, live monitor, assessment pages, hardware check), and everything that depends on real model output.
+skim, the PDF generator beyond checking that overrides are applied, the skill catalogue endpoints, the web screens that no
+test covers (the audio hooks, the hardware check, the assessment and vacancy forms), and everything that depends on real model
+output.
 
 ## 9. Assumptions and decisions that need an owner
 
@@ -199,6 +212,12 @@ skim, the PDF generator beyond checking that overrides are applied, the skill ca
 | An honest "partial" is preferred over finishing an interview early without evidence. | Spec 006 | Fatih, with product |
 | While a fit/gap rebuild runs, the previous report stays visible and is marked pending. | Spec 007 | Fatih, with product |
 | The brief gives both three to four days and three to five days; the deadline shown on the platform governs. | Brief | Fatih |
+| Deleting an assessment that has interviews is refused with 422; archiving or deleting with a reason is left to product. | Spec 013 | Fatih, with product |
+| A 403 means "not allowed", never "signed out"; only a 401 on a signed-in request ends the session. | Spec 014 | Fatih |
+| Duplicate skill labels in a vacancy are reported, neither merged nor refused. | Spec 018 | Fatih, with product |
+| Regenerating a portfolio removes an override on a skill that the new answer no longer contains. | Spec 019 | Fatih, with product |
+| `*` is an acceptable allowed origin outside production only. | Spec 024 | Fatih |
+| `APP_BASE_URL` keeps its name and now means the address of the web app, because existing deployments set it. | Spec 025 | Fatih |
 | The brief says to commit the platform as received, and also forbids naming the company, the product or any client anywhere in the repository. The history counts as "anywhere", so the source was made neutral before the first commit: names in comments, example configuration and strings were replaced by generic ones (41 lines in 25 files, no logic changed). The generic identifier `ai-interview` was kept because it describes the function and renaming it risks breaking code and infrastructure. | Initial import | Fatih |
 
 ## 10. Status at the time of writing
